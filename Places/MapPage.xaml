@@ -1,0 +1,63 @@
+﻿<Page
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Places"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:Maps="using:Windows.UI.Xaml.Controls.Maps"
+    x:Class="Places.MapPage"
+    mc:Ignorable="d"
+    Background="#A4C400">
+
+    <Grid x:Name="LayoutRoot">
+
+        <Grid.ChildrenTransitions>
+            <TransitionCollection>
+                <EntranceThemeTransition/>
+            </TransitionCollection>
+        </Grid.ChildrenTransitions>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- TitlePanel -->
+        <StackPanel Grid.Row="0" Margin="24,17,0,28">
+            <TextBlock x:Uid="Application" Text="" Style="{ThemeResource TitleTextBlockStyle}" Typography.Capitals="SmallCaps" Foreground="Black"/>
+            <TextBlock Text="places" Margin="0,12,0,0" Style="{ThemeResource HeaderTextBlockStyle}" Foreground="Black"/>
+        </StackPanel>
+
+        <!--TODO: Content should be placed within the following grid-->
+        <Grid Grid.Row="1" x:Name="ContentRoot" VerticalAlignment="Bottom" Background="AliceBlue">
+                <Maps:MapControl x:Name="PlacesMap" MapTapped="OnTapped" />
+        </Grid>
+    </Grid>
+    <Page.BottomAppBar>
+        <CommandBar Background="#A4C400" Foreground="Black">
+            <AppBarButton x:Uid="HomeButton" x:Name="HomeButton" Label="home" IsEnabled="False" Click="OnHomeClicked">
+                <AppBarButton.Icon>
+                    <BitmapIcon UriSource="/Assets/show-home.png"/>
+                </AppBarButton.Icon>
+            </AppBarButton>
+            <AppBarButton x:Uid="WorkButton" x:Name="WorkButton" Label="work" IsEnabled="False" Click="OnWorkClicked">
+                <AppBarButton.Icon>
+                    <BitmapIcon UriSource="/Assets/show-work.png"/>
+                </AppBarButton.Icon>
+            </AppBarButton>
+            <AppBarButton x:Uid="FrequentButton" x:Name="FrequentButton" Label="frequent" IsEnabled="False" Click="OnFrequentClicked">
+                <AppBarButton.Icon>
+                    <BitmapIcon UriSource="/Assets/show-next-favorite.png"/>
+                </AppBarButton.Icon>
+            </AppBarButton>
+            <AppBarButton x:Uid="CurrentButton" x:Name="CurrentButton" Label="current" IsEnabled="False" Click="OnCurrentClicked">
+                <AppBarButton.Icon>
+                    <BitmapIcon UriSource="/Assets/show-current-location.png"/>
+                </AppBarButton.Icon>
+            </AppBarButton>
+            <CommandBar.SecondaryCommands>
+                <AppBarButton x:Uid="AboutButton" x:Name="AboutButton" Label="About..." Click="OnAboutClicked"/>
+            </CommandBar.SecondaryCommands>
+        </CommandBar>
+    </Page.BottomAppBar>
+</Page>
