@@ -7,6 +7,10 @@ the map, draws a circle of known radius around them, and creates equal-sized
 geofences on those locations. The user is able to switch between the known places 
 by using the map or the application bar buttons.
 
+For more information on implementation, visit Nokia Lumia Developer's Library: 
+http://developer.nokia.com/resources/library/Lumia/sensorcore-sdk/samples.html
+http://developer.nokia.com/resources/library/Lumia/sensorcore-sdk/place-monitor-api.html
+
 1. Instructions
 --------------------------------------------------------------------------------
 
@@ -74,8 +78,14 @@ available online at https://github.com/nokia-developer/places/blob/master/Licens
 
 * Version 1.0: The first release.
 
+5. Downloads
+---------
 
-5. See also
+| Project | Release | Download |
+| ------- | --------| -------- |
+| Places | v1.0 | [places-1.0.zip](https://github.com/nokia-developer/places/archive/v1.0.zip) |
+
+6. See also
 --------------------------------------------------------------------------------
 
 The projects listed below are exemplifying the usage of the SensorCore APIs
