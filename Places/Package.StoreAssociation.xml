@@ -184,25 +184,25 @@
     <Language Code="vi-vn" InMinimumRequirementSet="true" />
   </SupportedLocales>
   <ProductReservedInfo>
-    <MainPackageIdentityName>NokiaDeveloper.placesbeta</MainPackageIdentityName>
+    <MainPackageIdentityName>NokiaDeveloper.PlacesLumiaSensorCoreSDKsample</MainPackageIdentityName>
     <ReservedNames>
-      <ReservedName>places (beta)</ReservedName>
+      <ReservedName>Places – Lumia SensorCore SDK sample</ReservedName>
     </ReservedNames>
   </ProductReservedInfo>
   <AccountPackageIdentityNames>
+    <MainPackageIdentityName>NokiaDeveloper.ActivitiesLumiaSensorCoreSDKsample</MainPackageIdentityName>
     <MainPackageIdentityName>NokiaDeveloper.ActivitiesBeta</MainPackageIdentityName>
     <MainPackageIdentityName>NokiaDeveloper.FilterEffects</MainPackageIdentityName>
     <MainPackageIdentityName>NokiaDeveloper.FilterExplorer</MainPackageIdentityName>
     <MainPackageIdentityName>NokiaDeveloper.places</MainPackageIdentityName>
+    <MainPackageIdentityName>NokiaDeveloper.placesbeta</MainPackageIdentityName>
+    <MainPackageIdentityName>NokiaDeveloper.RecorderLumiaSensorCoreSDKsample</MainPackageIdentityName>
     <MainPackageIdentityName>NokiaDeveloper.spaceselfie</MainPackageIdentityName>
+    <MainPackageIdentityName>NokiaDeveloper.steps</MainPackageIdentityName>
+    <MainPackageIdentityName>NokiaDeveloper.StepsLumiaSensorCoreSDKsample</MainPackageIdentityName>
     <MainPackageIdentityName>NokiaDeveloper.StepsBeta</MainPackageIdentityName>
+    <MainPackageIdentityName>NokiaDeveloper.TracksLumiaSensorCoreSDKsample</MainPackageIdentityName>
     <MainPackageIdentityName>NokiaDeveloper.tracksbeta</MainPackageIdentityName>
   </AccountPackageIdentityNames>
-  <PackageInfoList LandingUrl="https://dev.windowsphone.com/AppSubmission/AssociationLanding?windowsProductId=39ab6d39-d2b7-45d3-91aa-535e734b8305">
-    <PackageInfo>
-      <OsMinVersion>6.3.0.0</OsMinVersion>
-      <PackageArchitecture>arm</PackageArchitecture>
-      <PackageMaxArchitectureVersion>1.1.0.0</PackageMaxArchitectureVersion>
-    </PackageInfo>
-  </PackageInfoList>
+  <PackageInfoList LandingUrl="https://dev.windowsphone.com/AppSubmission/AssociationLanding?windowsProductId=154912c1-e21d-4cf8-b722-6b946f5937dd" />
 </StoreAssociation>

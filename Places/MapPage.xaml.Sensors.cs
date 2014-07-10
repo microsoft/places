@@ -16,8 +16,8 @@ using Windows.Devices.Enumeration;
 using Windows.Devices.Geolocation.Geofencing;
 using System.Collections.Generic;
 
-//using Monitor = Lumia.Sense.PlaceMonitor;
-using Monitor = Lumia.Sense.Testing.PlaceMonitorSimulator;
+using Monitor = Lumia.Sense.PlaceMonitor;
+//using Monitor = Lumia.Sense.Testing.PlaceMonitorSimulator;
 
 namespace Places
 {
@@ -97,14 +97,14 @@ namespace Places
                     cts = null;
                 }
                 // This is not implemented by the simulator, uncomment for the PlaceMonitor
-                //if (await Monitor.IsSupportedAsync())
+                if (await Monitor.IsSupportedAsync())
                 {
                     // Init SensorCore
                     if (await CallSensorcoreApiAsync(async () => { monitor = await Monitor.GetDefaultAsync(); }))
                     {
                         Debug.WriteLine("PlaceMonitor initialized.");
                         // Update list of known places
-                        UpdateKnownPlacesAsync();
+                        await UpdateKnownPlacesAsync();
 
                         HomeButton.IsEnabled = true;
                         WorkButton.IsEnabled = true;
@@ -119,17 +119,20 @@ namespace Places
                     // Focus on home
                     OnHomeClicked(null, null);
                 }
-/*                else
+                else
                 {
                     MessageDialog dialog;
-                    dialog = new MessageDialog("Your device doesn't support Motion Data. Some functionality will be disabled", "Information");
-                    dialog.Commands.Add(new UICommand("Ok"));
+                    dialog = new MessageDialog("Your device doesn't support Motion Data. Application will be closed", "Information");
+                    dialog.Commands.Add(new UICommand("OK"));
                     await dialog.ShowAsync();
-
+                    new System.Threading.ManualResetEvent(false).WaitOne(500);
+                    Application.Current.Exit();
+                    /*
                     HomeButton.IsEnabled = false;
                     WorkButton.IsEnabled = false;
                     FrequentButton.IsEnabled = false;
-                }*/
+                     */
+                }
             }
 
             // Activate and deactivate the SensorCore when the visibility of the app changes
@@ -394,7 +397,7 @@ namespace Places
                 switch (SenseHelper.GetSenseError(failure.HResult))
                 {
                     case SenseError.LocationDisabled:
-                        MessageDialog dialog = new MessageDialog("Location has been disabled. Do you want to open Location settings now?", "Information");
+                        MessageDialog dialog = new MessageDialog("Location has been disabled. Do you want to open Location settings now? If you choose no, application will exit.", "Information");
                         dialog.Commands.Add(new UICommand("Yes", async cmd => await SenseHelper.LaunchLocationSettingsAsync()));
                         dialog.Commands.Add(new UICommand("No"));
                         await dialog.ShowAsync();
@@ -402,7 +405,7 @@ namespace Places
                         return false;
 
                     case SenseError.SenseDisabled:
-                        dialog = new MessageDialog("Motion data has been disabled. Do you want to open Motion data settings now?", "Information");
+                        dialog = new MessageDialog("Motion data has been disabled. Do you want to open Motion data settings now? If you choose no, application will exit.", "Information");
                         dialog.Commands.Add(new UICommand("Yes", async cmd => await SenseHelper.LaunchSenseSettingsAsync()));
                         dialog.Commands.Add(new UICommand("No"));
                         await dialog.ShowAsync();
@@ -410,7 +413,7 @@ namespace Places
                         return false;
 
                     default:
-                        dialog = new MessageDialog("Failure: " + SenseHelper.GetSenseError(failure.HResult), "");
+                        dialog = new MessageDialog("Failure: " + SenseHelper.GetSenseError(failure.HResult) + " while initializing Motion data. Application will exit.", "");
                         await dialog.ShowAsync();
                         return false;
                 }

@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/2010/manifest" xmlns:m2="http://schemas.microsoft.com/appx/2013/manifest" xmlns:m3="http://schemas.microsoft.com/appx/2014/manifest" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest">
-  <Identity Name="NokiaDeveloper.placesbeta" Publisher="CN=4AD6DA08-6C39-4A10-98CC-3243374DA59C" Version="1.1.0.1" />
-  <mp:PhoneIdentity PhoneProductId="64e1b711-455a-4048-a565-4df58973247f" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
+  <Identity Name="NokiaDeveloper.PlacesLumiaSensorCoreSDKsample" Publisher="CN=4AD6DA08-6C39-4A10-98CC-3243374DA59C" Version="1.1.0.5" />
+  <mp:PhoneIdentity PhoneProductId="4a76e963-c4fa-4884-a385-3e12c6ea994d" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
-    <DisplayName>places (beta)</DisplayName>
+    <DisplayName>Places – Lumia SensorCore SDK sample</DisplayName>
     <PublisherDisplayName>Nokia Developer</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -16,7 +16,7 @@
   </Resources>
   <Applications>
     <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="Places.App">
-      <m3:VisualElements DisplayName="places (beta)" Square150x150Logo="Assets\Logo.png" Square44x44Logo="Assets\SmallLogo.png" Description="Places" ForegroundText="light" BackgroundColor="transparent">
+      <m3:VisualElements DisplayName="Places – Lumia SensorCore SDK sample" Square150x150Logo="Assets\Logo.png" Square44x44Logo="Assets\SmallLogo.png" Description="Places" ForegroundText="light" BackgroundColor="transparent">
         <m3:DefaultTile Wide310x150Logo="Assets\WideLogo.png" Square71x71Logo="Assets\Square71x71Logo.png">
         </m3:DefaultTile>
         <m3:SplashScreen Image="Assets\SplashScreen.png" />
