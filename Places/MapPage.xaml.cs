@@ -34,16 +34,9 @@ namespace Places
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
             this.navigationHelper.SaveState += this.NavigationHelper_SaveState;
 
-            this.Loaded += (sender, args) => CalculateMapSize();
             InitCore();
 
             PlacesMap.MapServiceToken = "XXX";
-        }
-
-        private void CalculateMapSize()
-        {
-            PlacesMap.Width = Window.Current.Bounds.Width;
-            PlacesMap.Height = LayoutRoot.RowDefinitions[1].ActualHeight;
         }
 
         /// <summary>

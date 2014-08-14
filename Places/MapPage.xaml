@@ -4,13 +4,12 @@
     xmlns:local="using:Places"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:Maps="using:Windows.UI.Xaml.Controls.Maps"
+    xmlns:maps="using:Windows.UI.Xaml.Controls.Maps"
     x:Class="Places.MapPage"
     mc:Ignorable="d"
     Background="#A4C400">
 
     <Grid x:Name="LayoutRoot">
-
         <Grid.ChildrenTransitions>
             <TransitionCollection>
                 <EntranceThemeTransition/>
@@ -23,18 +22,25 @@
         </Grid.RowDefinitions>
 
         <!-- TitlePanel -->
-        <StackPanel Grid.Row="0" Margin="24,17,0,28">
+        <StackPanel x:Name="TopPanel" Grid.Row="0" Margin="24,17,0,28" >
             <TextBlock x:Uid="Application" Text="" Style="{ThemeResource TitleTextBlockStyle}" Typography.Capitals="SmallCaps" Foreground="Black"/>
             <TextBlock Text="places" Margin="0,12,0,0" Style="{ThemeResource HeaderTextBlockStyle}" Foreground="Black"/>
         </StackPanel>
 
         <!--TODO: Content should be placed within the following grid-->
-        <Grid Grid.Row="1" x:Name="ContentRoot" VerticalAlignment="Bottom" Background="AliceBlue">
-                <Maps:MapControl x:Name="PlacesMap" MapTapped="OnTapped" />
+        <Grid Grid.Row="1" x:Name="ContentRoot" >
+            <maps:MapControl x:Name="PlacesMap" Margin="0,0,0,0"
+                             MapTapped="OnTapped" />
+            <SymbolIcon x:Name="FullScreeButton" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,15,31" Symbol="FullScreen" Tapped="FullScreeButton_OnTapped" RenderTransformOrigin="0.5,0.5" Grid.Column="1">
+                <SymbolIcon.RenderTransform>
+                    <CompositeTransform ScaleX="2" ScaleY="2"/>
+                </SymbolIcon.RenderTransform>
+            </SymbolIcon>
+
         </Grid>
     </Grid>
     <Page.BottomAppBar>
-        <CommandBar Background="#A4C400" Foreground="Black">
+        <CommandBar x:Name="CmdBar" Background="#A4C400" Foreground="Black">
             <AppBarButton x:Uid="HomeButton" x:Name="HomeButton" Label="home" IsEnabled="False" Click="OnHomeClicked">
                 <AppBarButton.Icon>
                     <BitmapIcon UriSource="/Assets/show-home.png"/>

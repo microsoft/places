@@ -3,7 +3,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.UI;
+using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Maps;
+using Windows.UI.Xaml.Input;
 using Lumia.Sense;
 using Windows.Devices.Geolocation;
 using Windows.UI.Xaml;
@@ -37,6 +39,7 @@ namespace Places
         private const double Wgs84B = 6356752.3;
         private Places.App app = Application.Current as Places.App;
         private Geopoint currentLocation;
+        private bool fullScreen;
 
         /// <summary>
         /// Initialize SensorCore and find the current position
@@ -417,6 +420,24 @@ namespace Places
             }
 
             return true;
+        }
+
+        private void FullScreeButton_OnTapped(object sender, TappedRoutedEventArgs e)
+        {
+            fullScreen = !fullScreen;
+
+            if (fullScreen)
+            {
+                CmdBar.Visibility = Visibility.Collapsed;
+                TopPanel.Visibility = Visibility.Collapsed;
+                FullScreeButton.Symbol = Symbol.BackToWindow;
+            }
+            else
+            {
+                CmdBar.Visibility = Visibility.Visible;
+                TopPanel.Visibility = Visibility.Visible;
+                FullScreeButton.Symbol = Symbol.FullScreen;
+            }
         }
     }
 }
