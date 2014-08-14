@@ -36,7 +36,7 @@ namespace Places
 
             InitCore();
 
-            PlacesMap.MapServiceToken = "XXX";
+            PlacesMap.MapServiceToken = "xxx";
         }
 
         /// <summary>
@@ -134,18 +134,19 @@ namespace Places
 
         private async void OnHomeClicked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
-            bool found = false;
 
-            foreach (Place place in app.places)
-            {
-                if (place.Kind == PlaceKind.Home)
+            bool found = false;
+            if(app.places != null)
+                foreach (Place place in app.places)
                 {
-                    PlacesMap.Center = new Geopoint(place.Position);
-                    PlacesMap.ZoomLevel = 16;
-                    found = true;
-                    break;
+                    if (place.Kind == PlaceKind.Home)
+                    {
+                        PlacesMap.Center = new Geopoint(place.Position);
+                        PlacesMap.ZoomLevel = 16;
+                        found = true;
+                        break;
+                    }
                 }
-            }
 
             // It takes some time for SensorCore SDK to figure out your known locations
             if (!found)

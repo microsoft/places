@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AboutDescription.Text" xml:space="preserve">
-    <value>This developer sample demonstrates Nokia SensorCore SDK Places API functionality.</value>
+    <value>This developer sample demonstrates Lumia SensorCore SDK Places API functionality.</value>
   </data>
   <data name="AboutDisclaimer.Text" xml:space="preserve">
     <value>This Nokia developer example application has been created to provide tips and best practice guidance for software developers and app designers, and may not have all the features you would expect in a commercial product. This application is published in Store as a free software as it may also have value to regular Nokia phone users. The source code and documentation of this example can be downloaded from Nokia Developer website.</value>
@@ -136,7 +136,7 @@
     <value>add</value>
   </data>
   <data name="Application.Text" xml:space="preserve">
-    <value>SENSORCORE SAMPLE</value>
+    <value>LUMIA SENSORCORE SAMPLE</value>
   </data>
   <data name="Header.Text" xml:space="preserve">
     <value>PLACES</value>
