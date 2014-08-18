@@ -1,0 +1,54 @@
+﻿<Page
+    x:Class="Places.AboutPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Places"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="#A4C400">
+
+    <Grid x:Name="LayoutRoot">
+
+        <Grid.ChildrenTransitions>
+            <TransitionCollection>
+                <EntranceThemeTransition/>
+            </TransitionCollection>
+        </Grid.ChildrenTransitions>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- TitlePanel -->
+        <StackPanel Grid.Row="0" Margin="24,17,0,28">
+            <TextBlock x:Uid="Application" Text="" Style="{ThemeResource TitleTextBlockStyle}" Typography.Capitals="SmallCaps" Foreground="Black"/>
+            <TextBlock x:Uid="AboutPage" Text="" Margin="0,12,0,0" Style="{ThemeResource HeaderTextBlockStyle}" Foreground="Black"/>
+        </StackPanel>
+
+        <StackPanel x:Name="ContentPanel" Grid.Row="1" Margin="12,0,12,0">
+            <RichTextBlock FontSize="16">
+                <Paragraph>
+                    <Run x:Uid="Version" Text="" Foreground="Black"/>
+                    <Run x:Name="VersionNumber" Text="" Foreground="Black"/>
+                </Paragraph>
+                <Paragraph/>
+                <Paragraph>
+                    <Run x:Uid="AboutDescription" Text="" Foreground="Black"/>
+                </Paragraph>
+                <Paragraph/>
+                <Paragraph>
+                    <Run x:Uid="AboutDisclaimer" Text="" Foreground="Black"/>
+                </Paragraph>
+                <Paragraph/>
+                <Paragraph>
+                    <Run x:Uid="AboutMore" Text="" Foreground="Black"/>
+                </Paragraph>
+                <Paragraph/>
+            </RichTextBlock>
+            <HyperlinkButton NavigateUri="http://developer.nokia.com"
+                Content="Nokia Developer website" FontSize="24"/>
+        </StackPanel>
+    </Grid>
+</Page>
