@@ -12,6 +12,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Maps;
 using Windows.UI.Xaml.Navigation;
 using System.Diagnostics;
+using System.Linq;
 
 // The Basic Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
 
@@ -24,7 +25,7 @@ namespace Places
     {
         private NavigationHelper navigationHelper;
         private ObservableDictionary defaultViewModel = new ObservableDictionary();
-        private int chosenFrequentId = 0;
+        private int chosenFrequentId = -1;
 
         public MapPage()
         {
@@ -194,39 +195,25 @@ namespace Places
 
         private void OnFrequentClicked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
-            int j = 0;
-            bool found = false;
-            bool foundFirst = false;
-            var first = new BasicGeoposition();
+            var notHomeNorWork =
+                from place in app.places
+                where place.Kind != PlaceKind.Home && place.Kind != PlaceKind.Work
+                orderby place.Kind descending
+                select place;
 
-            foreach (var place in app.places)
+            if (notHomeNorWork.Count() == 0)
             {
-                if (place.Kind == PlaceKind.Known)
-                {
-                    if (j == chosenFrequentId)
-                    {
-                        PlacesMap.Center = new Geopoint(place.Position);
-                        PlacesMap.ZoomLevel = 16;
-                        found = true;
-                        break;
-                    }
-                    if (!foundFirst)
-                    {
-                        first = place.Position;
-                        foundFirst = true;
-                    }
-                    j++;
-                }
-            }
-
-            if (!found && foundFirst)
-            {
-                chosenFrequentId = 0;
-                PlacesMap.Center = new Geopoint(first);
-                PlacesMap.ZoomLevel = 16;
+                return;
             }
 
             chosenFrequentId++;
+            if (chosenFrequentId >= notHomeNorWork.Count())
+            {
+                chosenFrequentId = 0;
+            }
+
+            PlacesMap.Center = new Geopoint(notHomeNorWork.ElementAt(chosenFrequentId).Position);
+            PlacesMap.ZoomLevel = 16;
         }
 
         private void OnAboutClicked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
