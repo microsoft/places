@@ -43,7 +43,6 @@ namespace Places
             this.InitializeComponent();
             this.Suspending += this.OnSuspending;
             HardwareButtons.BackPressed += this.HardwareButtons_BackPressed;
-            this.UnhandledException += App_UnhandledException;
         }
 
         /// <summary>
