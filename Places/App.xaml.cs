@@ -10,6 +10,7 @@ using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Phone.UI.Input;
+using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -29,6 +30,7 @@ namespace Places
     public sealed partial class App : Application
     {
         public IList<Place> places = null;
+        public ActivateSensorCoreStatus sensorCoreActivationStatus = new ActivateSensorCoreStatus();
 
         private TransitionCollection transitions;
 
@@ -41,6 +43,7 @@ namespace Places
             this.InitializeComponent();
             this.Suspending += this.OnSuspending;
             HardwareButtons.BackPressed += this.HardwareButtons_BackPressed;
+            this.UnhandledException += App_UnhandledException;
         }
 
         /// <summary>

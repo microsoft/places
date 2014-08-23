@@ -48,6 +48,36 @@ namespace Places
         {
             if (monitor == null)
             {
+                // This is not implemented by the simulator, uncomment for the PlaceMonitor
+                if (await Monitor.IsSupportedAsync())
+                {
+                    // Init SensorCore
+                    if (await CallSensorcoreApiAsync(async () => { monitor = await Monitor.GetDefaultAsync(); }))
+                    {
+                        Debug.WriteLine("PlaceMonitor initialized.");
+                        // Update list of known places
+                        await UpdateKnownPlacesAsync();
+
+                        HomeButton.IsEnabled = true;
+                        WorkButton.IsEnabled = true;
+                        FrequentButton.IsEnabled = true;
+                        CurrentButton.IsEnabled = true;
+
+                        // Focus on home
+                        OnHomeClicked(null, null);
+                    }
+                    else return;
+                }
+                else
+                {
+                    MessageDialog dialog;
+                    dialog = new MessageDialog("Your device doesn't support Motion Data. Application will be closed", "Information");
+                    dialog.Commands.Add(new UICommand("OK"));
+                    await dialog.ShowAsync();
+                    new System.Threading.ManualResetEvent(false).WaitOne(500);
+                    Application.Current.Exit();
+                }
+
                 // Init Geolocator
                 try
                 {
@@ -99,43 +129,7 @@ namespace Places
                 {
                     cts = null;
                 }
-                // This is not implemented by the simulator, uncomment for the PlaceMonitor
-                if (await Monitor.IsSupportedAsync())
-                {
-                    // Init SensorCore
-                    if (await CallSensorcoreApiAsync(async () => { monitor = await Monitor.GetDefaultAsync(); }))
-                    {
-                        Debug.WriteLine("PlaceMonitor initialized.");
-                        // Update list of known places
-                        await UpdateKnownPlacesAsync();
-
-                        HomeButton.IsEnabled = true;
-                        WorkButton.IsEnabled = true;
-                        FrequentButton.IsEnabled = true;
-                        CurrentButton.IsEnabled = true;
-                    }
-                    else
-                    {
-                        Application.Current.Exit();
-                    }
-
-                    // Focus on home
-                    OnHomeClicked(null, null);
-                }
-                else
-                {
-                    MessageDialog dialog;
-                    dialog = new MessageDialog("Your device doesn't support Motion Data. Application will be closed", "Information");
-                    dialog.Commands.Add(new UICommand("OK"));
-                    await dialog.ShowAsync();
-                    new System.Threading.ManualResetEvent(false).WaitOne(500);
-                    Application.Current.Exit();
-                    /*
-                    HomeButton.IsEnabled = false;
-                    WorkButton.IsEnabled = false;
-                    FrequentButton.IsEnabled = false;
-                     */
-                }
+               
             }
 
             // Activate and deactivate the SensorCore when the visibility of the app changes
@@ -400,23 +394,12 @@ namespace Places
                 switch (SenseHelper.GetSenseError(failure.HResult))
                 {
                     case SenseError.LocationDisabled:
-                        MessageDialog dialog = new MessageDialog("Location has been disabled. Do you want to open Location settings now? If you choose no, application will exit.", "Information");
-                        dialog.Commands.Add(new UICommand("Yes", async cmd => await SenseHelper.LaunchLocationSettingsAsync()));
-                        dialog.Commands.Add(new UICommand("No"));
-                        await dialog.ShowAsync();
-                        new System.Threading.ManualResetEvent(false).WaitOne(500);
-                        return false;
-
                     case SenseError.SenseDisabled:
-                        dialog = new MessageDialog("Motion data has been disabled. Do you want to open Motion data settings now? If you choose no, application will exit.", "Information");
-                        dialog.Commands.Add(new UICommand("Yes", async cmd => await SenseHelper.LaunchSenseSettingsAsync()));
-                        dialog.Commands.Add(new UICommand("No"));
-                        await dialog.ShowAsync();
-                        new System.Threading.ManualResetEvent(false).WaitOne(500);
+                        this.Frame.Navigate(typeof(ActivateSensorCore));
                         return false;
 
                     default:
-                        dialog = new MessageDialog("Failure: " + SenseHelper.GetSenseError(failure.HResult) + " while initializing Motion data. Application will exit.", "");
+                        MessageDialog dialog = new MessageDialog("Failure: " + SenseHelper.GetSenseError(failure.HResult) + " while initializing Motion data. Application will exit.", "");
                         await dialog.ShowAsync();
                         return false;
                 }

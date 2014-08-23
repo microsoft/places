@@ -35,8 +35,6 @@ namespace Places
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
             this.navigationHelper.SaveState += this.NavigationHelper_SaveState;
 
-            InitCore();
-
             PlacesMap.MapServiceToken = "xxx";
         }
 
@@ -103,6 +101,22 @@ namespace Places
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             this.navigationHelper.OnNavigatedTo(e);
+            ActivateSensorCoreStatus status = app.sensorCoreActivationStatus;
+            if (e.NavigationMode == NavigationMode.Back && status.Ongoing)
+            {
+                status.Ongoing = false;
+                if (status.ActivationRequestResult != ActivationRequestResults.AllEnabled)
+                {
+                    MessageDialog dialog;
+                    dialog = new MessageDialog("This application doesn't function without MotionData. Application will be closed", "Information");
+                    dialog.Commands.Add(new UICommand("OK"));
+                    await dialog.ShowAsync();
+                    new System.Threading.ManualResetEvent(false).WaitOne(500);
+                    Application.Current.Exit();
+                }
+            }
+
+            InitCore();
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
