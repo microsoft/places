@@ -31,21 +31,15 @@ namespace Places
         public ActivateSensorCore()
         {
             InitializeComponent();
-            Loaded += ActivateSensorCore_Loaded;
-            Window.Current.VisibilityChanged += Current_VisibilityChanged;
             
             var app = Application.Current as Places.App; // The application model
             sensorCoreActivationStatus = app.sensorCoreActivationStatus;
         }
 
 
-        async void ActivateSensorCore_Loaded(object sender, RoutedEventArgs e)
-        {
-            await UpdateDialog();
-        }
-
         async Task UpdateDialog()
         {
+
             MotionDataActivationBox.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
             LocationActivationBox.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
             sensorCoreActivationStatus.ActivationRequestResult = ActivationRequestResults.AskMeLater;
@@ -80,13 +74,22 @@ namespace Places
                 this.Frame.GoBack();
             }
         }
-     
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
             if (e.NavigationMode == NavigationMode.New)
             {
+                Window.Current.VisibilityChanged += Current_VisibilityChanged;
                 sensorCoreActivationStatus.Ongoing = true;
+            }
+            await UpdateDialog();
+        }
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            if (e.NavigationMode == NavigationMode.Back)
+            {
+                Window.Current.VisibilityChanged -= Current_VisibilityChanged;
             }
         }
 
@@ -109,8 +112,6 @@ namespace Places
             sensorCoreActivationStatus.ActivationRequestResult = ActivationRequestResults.NoAndDontAskAgain;
             this.Frame.GoBack();
         }
-
-
         private async void MotionDataActivationButton_Click(object sender, RoutedEventArgs e)
         {
             await SenseHelper.LaunchSenseSettingsAsync();
