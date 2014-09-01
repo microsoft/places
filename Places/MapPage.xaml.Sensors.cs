@@ -230,7 +230,7 @@ namespace Places
         {
             var reports = sender.ReadReports();
 
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
                 foreach (GeofenceStateChangeReport report in reports)
                 {
@@ -249,7 +249,7 @@ namespace Places
                             if (place.Id.ToString() == geofence.Id)
                             {
                                 var dia = new MessageDialog("You have entered - " + place.Kind.ToString());
-                                dia.ShowAsync();
+                                await dia.ShowAsync();
                             }
                         }
 
@@ -261,7 +261,7 @@ namespace Places
                             if (place.Id.ToString() == geofence.Id)
                             {
                                 var dia = new MessageDialog("You have left - " + place.Kind.ToString());
-                                dia.ShowAsync();
+                                await dia.ShowAsync();
                             }
                         }
                     }
