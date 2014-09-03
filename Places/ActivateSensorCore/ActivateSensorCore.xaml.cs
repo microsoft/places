@@ -27,6 +27,7 @@ namespace Places
     {
 
         private ActivateSensorCoreStatus sensorCoreActivationStatus;
+        private bool updatingDialog = false;
 
         public ActivateSensorCore()
         {
@@ -39,15 +40,22 @@ namespace Places
 
         async Task UpdateDialog()
         {
-
+            if (updatingDialog || (sensorCoreActivationStatus.ActivationRequestResult != ActivationRequestResults.NotAvailableYet))
+            {
+                 return;
+            }
+            updatingDialog = true;
             MotionDataActivationBox.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
             LocationActivationBox.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
-            sensorCoreActivationStatus.ActivationRequestResult = ActivationRequestResults.AskMeLater;
-
             Exception failure = null;
             try
             {
-                await Lumia.Sense.PlaceMonitor.GetDefaultAsync();
+                // GetDefaultAsync will throw if MotionData is disabled  
+                PlaceMonitor monitor = await Lumia.Sense.PlaceMonitor.GetDefaultAsync();
+
+                // But confirm that MotionData is really enabled by calling ActivateAsync,
+                // to cover the case where the MotionData has been disabled after the app has been launched.
+                await monitor.ActivateAsync(); 
             }
             catch (Exception exception)
             {
@@ -66,13 +74,15 @@ namespace Places
 
                 failure = exception;
             }
-            if (failure == null)
+
+            if (failure == null) 
             {
                 // All is good now, dismiss the dialog.
 
                 sensorCoreActivationStatus.ActivationRequestResult = ActivationRequestResults.AllEnabled;
                 this.Frame.GoBack();
             }
+            updatingDialog = false;
         }
 
         protected async override void OnNavigatedTo(NavigationEventArgs e)
@@ -81,6 +91,7 @@ namespace Places
             {
                 Window.Current.VisibilityChanged += Current_VisibilityChanged;
                 sensorCoreActivationStatus.Ongoing = true;
+                sensorCoreActivationStatus.ActivationRequestResult = ActivationRequestResults.NotAvailableYet;
             }
             await UpdateDialog();
         }
@@ -112,6 +123,7 @@ namespace Places
             sensorCoreActivationStatus.ActivationRequestResult = ActivationRequestResults.NoAndDontAskAgain;
             this.Frame.GoBack();
         }
+
         private async void MotionDataActivationButton_Click(object sender, RoutedEventArgs e)
         {
             await SenseHelper.LaunchSenseSettingsAsync();

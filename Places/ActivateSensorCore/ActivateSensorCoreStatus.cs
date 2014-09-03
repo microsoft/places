@@ -10,7 +10,8 @@ namespace Places
     {
         AllEnabled,
         AskMeLater,
-        NoAndDontAskAgain
+        NoAndDontAskAgain,
+        NotAvailableYet
     };
 
     public class ActivateSensorCoreStatus

@@ -395,7 +395,10 @@ namespace Places
                 {
                     case SenseError.LocationDisabled:
                     case SenseError.SenseDisabled:
-                        this.Frame.Navigate(typeof(ActivateSensorCore));
+                        if (!app.sensorCoreActivationStatus.Ongoing)
+                        {
+                            this.Frame.Navigate(typeof(ActivateSensorCore));
+                        }
                         return false;
 
                     default:
