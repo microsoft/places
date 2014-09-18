@@ -1,19 +1,21 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
 using Windows.ApplicationModel.Resources;
 using Windows.Devices.Geolocation;
 using Windows.Foundation;
 using Windows.Graphics.Display;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
-using Lumia.Sense;
-using Places.Common;
-using System;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Maps;
 using Windows.UI.Xaml.Navigation;
-using System.Diagnostics;
 
-// The Basic Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
+using Lumia.Sense;
+
+using Places.Common;
+
 
 namespace Places
 {
@@ -24,7 +26,8 @@ namespace Places
     {
         private NavigationHelper navigationHelper;
         private ObservableDictionary defaultViewModel = new ObservableDictionary();
-        private int chosenFrequentId = 0;
+        private int chosenFrequentId = -1;
+
 
         public MapPage()
         {
@@ -33,8 +36,6 @@ namespace Places
             this.navigationHelper = new NavigationHelper(this);
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
             this.navigationHelper.SaveState += this.NavigationHelper_SaveState;
-
-            InitCore();
 
             PlacesMap.MapServiceToken = "xxx";
         }
@@ -102,6 +103,24 @@ namespace Places
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             this.navigationHelper.OnNavigatedTo(e);
+            ActivateSensorCoreStatus status = app.SensorCoreActivationStatus;
+
+            if (e.NavigationMode == NavigationMode.Back && status.Ongoing)
+            {
+                status.Ongoing = false;
+
+                if (status.ActivationRequestResult != ActivationRequestResults.AllEnabled)
+                {
+                    MessageDialog dialog;
+                    dialog = new MessageDialog("This application doesn't function without MotionData. Application will be closed", "Information");
+                    dialog.Commands.Add(new UICommand("OK"));
+                    await dialog.ShowAsync();
+                    new System.Threading.ManualResetEvent(false).WaitOne(500);
+                    Application.Current.Exit();
+                }
+            }
+
+            InitCore();
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -134,10 +153,11 @@ namespace Places
 
         private async void OnHomeClicked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
-
             bool found = false;
-            if(app.places != null)
-                foreach (Place place in app.places)
+
+            if (app.Places != null)
+            {
+                foreach (Place place in app.Places)
                 {
                     if (place.Kind == PlaceKind.Home)
                     {
@@ -147,6 +167,7 @@ namespace Places
                         break;
                     }
                 }
+            }
 
             // It takes some time for SensorCore SDK to figure out your known locations
             if (!found)
@@ -164,7 +185,7 @@ namespace Places
         {
             bool found = false;
 
-            foreach (Place place in app.places)
+            foreach (Place place in app.Places)
             {
                 if (place.Kind == PlaceKind.Work)
                 {
@@ -194,39 +215,26 @@ namespace Places
 
         private void OnFrequentClicked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
-            int j = 0;
-            bool found = false;
-            bool foundFirst = false;
-            var first = new BasicGeoposition();
+            var notHomeNorWork =
+                from place in app.Places
+                where place.Kind != PlaceKind.Home && place.Kind != PlaceKind.Work
+                orderby place.Kind descending
+                select place;
 
-            foreach (var place in app.places)
+            if (notHomeNorWork.Count() == 0)
             {
-                if (place.Kind == PlaceKind.Known)
-                {
-                    if (j == chosenFrequentId)
-                    {
-                        PlacesMap.Center = new Geopoint(place.Position);
-                        PlacesMap.ZoomLevel = 16;
-                        found = true;
-                        break;
-                    }
-                    if (!foundFirst)
-                    {
-                        first = place.Position;
-                        foundFirst = true;
-                    }
-                    j++;
-                }
-            }
-
-            if (!found && foundFirst)
-            {
-                chosenFrequentId = 0;
-                PlacesMap.Center = new Geopoint(first);
-                PlacesMap.ZoomLevel = 16;
+                return;
             }
 
             chosenFrequentId++;
+
+            if (chosenFrequentId >= notHomeNorWork.Count())
+            {
+                chosenFrequentId = 0;
+            }
+
+            PlacesMap.Center = new Geopoint(notHomeNorWork.ElementAt(chosenFrequentId).Position);
+            PlacesMap.ZoomLevel = 16;
         }
 
         private void OnAboutClicked(object sender, Windows.UI.Xaml.RoutedEventArgs e)

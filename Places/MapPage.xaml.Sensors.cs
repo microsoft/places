@@ -48,19 +48,43 @@ namespace Places
         {
             if (monitor == null)
             {
+                // This is not implemented by the simulator, uncomment for the PlaceMonitor
+                if (await Monitor.IsSupportedAsync())
+                {
+                    // Init SensorCore
+                    if (await CallSensorcoreApiAsync(async () => { monitor = await Monitor.GetDefaultAsync(); }))
+                    {
+                        Debug.WriteLine("PlaceMonitor initialized.");
+                        // Update list of known places
+                        await UpdateKnownPlacesAsync();
+                        HomeButton.IsEnabled = true;
+                        WorkButton.IsEnabled = true;
+                        FrequentButton.IsEnabled = true;
+                        CurrentButton.IsEnabled = true;
+                        // Focus on home
+                        OnHomeClicked(null, null);
+                    }
+                    else return;
+                }
+                else
+                {
+                    MessageDialog dialog;
+                    dialog = new MessageDialog("Your device doesn't support Motion Data. Application will be closed", "Information");
+                    dialog.Commands.Add(new UICommand("OK"));
+                    await dialog.ShowAsync();
+                    new System.Threading.ManualResetEvent(false).WaitOne(500);
+                    Application.Current.Exit();
+                }
                 // Init Geolocator
                 try
                 {
                     accessInfo = DeviceAccessInformation.CreateFromDeviceClass(DeviceClass.Location);
                     accessInfo.AccessChanged += OnAccessChanged;
-
-                    // Get a geolocator object 
+                    // Get a geolocator object
                     geolocator = new Geolocator();
-
                     // Get cancellation token
                     cts = new CancellationTokenSource();
                     CancellationToken token = cts.Token;
-
                     Geoposition geoposition = await geolocator.GetGeopositionAsync().AsTask(token);
                     currentLocation = new Geopoint(new BasicGeoposition()
                     {
@@ -89,59 +113,22 @@ namespace Places
                 }
                 catch (Exception ex)
                 {
-                    if ((uint) ex.HResult == 0x80004004)
+                    if ((uint)ex.HResult == 0x80004004)
                     {
                         // the application does not have the right capability or the location master switch is off
-                        Debug.WriteLine("location  is disabled in phone settings.");
+                        Debug.WriteLine("location is disabled in phone settings.");
                     }
                 }
                 finally
                 {
                     cts = null;
                 }
-                // This is not implemented by the simulator, uncomment for the PlaceMonitor
-                if (await Monitor.IsSupportedAsync())
-                {
-                    // Init SensorCore
-                    if (await CallSensorcoreApiAsync(async () => { monitor = await Monitor.GetDefaultAsync(); }))
-                    {
-                        Debug.WriteLine("PlaceMonitor initialized.");
-                        // Update list of known places
-                        await UpdateKnownPlacesAsync();
-
-                        HomeButton.IsEnabled = true;
-                        WorkButton.IsEnabled = true;
-                        FrequentButton.IsEnabled = true;
-                        CurrentButton.IsEnabled = true;
-                    }
-                    else
-                    {
-                        Application.Current.Exit();
-                    }
-
-                    // Focus on home
-                    OnHomeClicked(null, null);
-                }
-                else
-                {
-                    MessageDialog dialog;
-                    dialog = new MessageDialog("Your device doesn't support Motion Data. Application will be closed", "Information");
-                    dialog.Commands.Add(new UICommand("OK"));
-                    await dialog.ShowAsync();
-                    new System.Threading.ManualResetEvent(false).WaitOne(500);
-                    Application.Current.Exit();
-                    /*
-                    HomeButton.IsEnabled = false;
-                    WorkButton.IsEnabled = false;
-                    FrequentButton.IsEnabled = false;
-                     */
-                }
             }
-
             // Activate and deactivate the SensorCore when the visibility of the app changes
             Window.Current.VisibilityChanged += async (oo, ee) =>
             {
-                if (monitor != null) {
+                if (monitor != null)
+                {
                     if (!ee.Visible)
                     {
                         await CallSensorcoreApiAsync(async () => { await monitor.DeactivateAsync(); });
@@ -149,9 +136,9 @@ namespace Places
                     else
                     {
                         await CallSensorcoreApiAsync(async () => { await monitor.ActivateAsync(); });
-                    } }
+                    }
+                }
             };
-             
         }
 
         /// <summary>
@@ -236,7 +223,7 @@ namespace Places
         {
             var reports = sender.ReadReports();
 
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
                 foreach (GeofenceStateChangeReport report in reports)
                 {
@@ -250,24 +237,24 @@ namespace Places
                     }
                     else if (state == GeofenceState.Entered)
                     {
-                        foreach (Place place in app.places)
+                        foreach (Place place in app.Places)
                         {
                             if (place.Id.ToString() == geofence.Id)
                             {
                                 var dia = new MessageDialog("You have entered - " + place.Kind.ToString());
-                                dia.ShowAsync();
+                                await dia.ShowAsync();
                             }
                         }
 
                     }
                     else if (state == GeofenceState.Exited)
                     {
-                        foreach (Place place in app.places)
+                        foreach (Place place in app.Places)
                         {
                             if (place.Id.ToString() == geofence.Id)
                             {
                                 var dia = new MessageDialog("You have left - " + place.Kind.ToString());
-                                dia.ShowAsync();
+                                await dia.ShowAsync();
                             }
                         }
                     }
@@ -336,13 +323,13 @@ namespace Places
         {
             if (monitor != null)
             {
-                app.places = null;
+                app.Places = null;
 
                 PlacesMap.MapElements.Clear();
     
-                if (await CallSensorcoreApiAsync(async () => { app.places = await monitor.GetKnownPlacesAsync();}))
+                if (await CallSensorcoreApiAsync(async () => { app.Places = await monitor.GetKnownPlacesAsync();}))
                 {
-                    foreach (var p in app.places)
+                    foreach (var p in app.Places)
                     {
                         System.Diagnostics.Debug.WriteLine("Place {0} radius {1} Latitude {2} Longitude {3} ",p.Kind, p.Radius, p.Position.Latitude, p.Position.Longitude);
                         var icon = new MapIcon();
@@ -400,23 +387,15 @@ namespace Places
                 switch (SenseHelper.GetSenseError(failure.HResult))
                 {
                     case SenseError.LocationDisabled:
-                        MessageDialog dialog = new MessageDialog("Location has been disabled. Do you want to open Location settings now? If you choose no, application will exit.", "Information");
-                        dialog.Commands.Add(new UICommand("Yes", async cmd => await SenseHelper.LaunchLocationSettingsAsync()));
-                        dialog.Commands.Add(new UICommand("No"));
-                        await dialog.ShowAsync();
-                        new System.Threading.ManualResetEvent(false).WaitOne(500);
-                        return false;
-
                     case SenseError.SenseDisabled:
-                        dialog = new MessageDialog("Motion data has been disabled. Do you want to open Motion data settings now? If you choose no, application will exit.", "Information");
-                        dialog.Commands.Add(new UICommand("Yes", async cmd => await SenseHelper.LaunchSenseSettingsAsync()));
-                        dialog.Commands.Add(new UICommand("No"));
-                        await dialog.ShowAsync();
-                        new System.Threading.ManualResetEvent(false).WaitOne(500);
-                        return false;
+                        if (!app.SensorCoreActivationStatus.Ongoing)
+                        {
+                            this.Frame.Navigate(typeof(ActivateSensorCore));
+                        }
 
+                        return false;
                     default:
-                        dialog = new MessageDialog("Failure: " + SenseHelper.GetSenseError(failure.HResult) + " while initializing Motion data. Application will exit.", "");
+                        MessageDialog dialog = new MessageDialog("Failure: " + SenseHelper.GetSenseError(failure.HResult) + " while initializing Motion data. Application will exit.", "");
                         await dialog.ShowAsync();
                         return false;
                 }

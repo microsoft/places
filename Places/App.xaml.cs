@@ -1,6 +1,4 @@
-﻿using Lumia.Sense;
-using Places.Common;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,14 +10,13 @@ using Windows.Foundation.Collections;
 using Windows.Phone.UI.Input;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
 
-// The Pivot Application template is documented at http://go.microsoft.com/fwlink/?LinkID=391641
+using Lumia.Sense;
+
+using Places.Common;
+
 
 namespace Places
 {
@@ -28,9 +25,26 @@ namespace Places
     /// </summary>
     public sealed partial class App : Application
     {
-        public IList<Place> places = null;
-
         private TransitionCollection transitions;
+
+        private ActivateSensorCoreStatus _sensorCoreActivationStatus = new ActivateSensorCoreStatus();
+        public ActivateSensorCoreStatus SensorCoreActivationStatus
+        {
+            get
+            {
+                return _sensorCoreActivationStatus;
+            }
+            private set
+            {
+                _sensorCoreActivationStatus = value;
+            }
+        }
+
+        public IList<Place> Places
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -144,12 +158,14 @@ namespace Places
         private void HardwareButtons_BackPressed(object sender, BackPressedEventArgs e)
         {
             Frame frame = Window.Current.Content as Frame;
+
             if (frame == null)
             {
                 return;
             }
 
             var handler = this.BackPressed;
+
             if (handler != null)
             {
                 handler(sender, e);
