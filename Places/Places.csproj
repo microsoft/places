@@ -128,7 +128,6 @@
     <Content Include="Assets\WideLogo.scale-240.png" />
     <Content Include="Common\ReadMe.txt" />
     <None Include="Help\LumiaSensorCoreSDK.chm" />
-    <None Include="Package.StoreAssociation.xml" />
     <None Include="packages.config" />
     <PRIResource Include="Strings\en-US\ActivateSensorCore.resw" />
   </ItemGroup>
@@ -188,7 +187,9 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\LumiaSensorCoreSDK.1.0.3.263\build\wpa81\LumiaSensorCoreSDK.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\LumiaSensorCoreSDK.1.0.3.263\build\wpa81\LumiaSensorCoreSDK.targets'))" />
+    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
   </Target>
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
