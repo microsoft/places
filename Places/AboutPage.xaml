@@ -20,35 +20,41 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-
+            
         <!-- TitlePanel -->
         <StackPanel Grid.Row="0" Margin="24,17,0,28">
             <TextBlock x:Uid="Application" Text="" Style="{ThemeResource TitleTextBlockStyle}" Typography.Capitals="SmallCaps" Foreground="Black"/>
             <TextBlock x:Uid="AboutPage" Text="" Margin="0,12,0,0" Style="{ThemeResource HeaderTextBlockStyle}" Foreground="Black"/>
         </StackPanel>
 
-        <StackPanel x:Name="ContentPanel" Grid.Row="1" Margin="12,0,12,0">
-            <RichTextBlock FontSize="16">
-                <Paragraph>
-                    <Run x:Uid="Version" Text="" Foreground="Black"/>
-                    <Run x:Name="VersionNumber" Text="" Foreground="Black"/>
-                </Paragraph>
-                <Paragraph/>
-                <Paragraph>
-                    <Run x:Uid="AboutDescription" Text="" Foreground="Black"/>
-                </Paragraph>
-                <Paragraph/>
-                <Paragraph>
-                    <Run x:Uid="AboutDisclaimer" Text="" Foreground="Black"/>
-                </Paragraph>
-                <Paragraph/>
-                <Paragraph>
-                    <Run x:Uid="AboutMore" Text="" Foreground="Black"/>
-                </Paragraph>
-                <Paragraph/>
-            </RichTextBlock>
-            <HyperlinkButton NavigateUri="http://developer.nokia.com"
-                Content="Nokia Developer website" FontSize="24"/>
-        </StackPanel>
+        <ScrollViewer Grid.Row="1">
+            <StackPanel x:Name="ContentPanel" Margin="12,0,24,0">
+                <RichTextBlock Style="{ThemeResource BodyRichTextBlockStyle}">
+                    <Paragraph FontWeight="Bold">
+                        <Run x:Uid="ApplicationName" Text="" Foreground="Black"/>
+                        <Run x:Uid="Version" Text="" Foreground="Black"/>
+                        <Run x:Name="VersionNumber" Text="" Foreground="Black"/>
+                    </Paragraph>
+                    <Paragraph/>
+                    <Paragraph>
+                        <Run x:Uid="AboutDescription" Text="" Foreground="Black"/>
+                    </Paragraph>
+                    <Paragraph/>
+                    <Paragraph>
+                        <Run x:Uid="AboutDisclaimer" Text="" Foreground="Black"/>
+                    </Paragraph>
+                </RichTextBlock>
+                <HyperlinkButton NavigateUri="https://github.com/nokia-developer/places">
+                    <HyperlinkButton.Content>
+                        <TextBlock
+                            Margin="6,12,0,0"
+                            Style="{ThemeResource BodyTextBlockStyle}"
+                            Foreground="Black"
+                            TextWrapping="Wrap"
+                            Text="Places project in GitHub" />
+                    </HyperlinkButton.Content>
+                </HyperlinkButton>
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </Page>

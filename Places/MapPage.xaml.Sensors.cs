@@ -29,48 +29,54 @@ namespace Places
     /// </summary>
     public sealed partial class MapPage
     {
-        private Monitor monitor;
-        private Geolocator geolocator;
-        private CancellationTokenSource cts;
-        private DeviceAccessInformation accessInfo;
-
+        // Constants
+        private readonly Color PlacesColorHome = Color.FromArgb(AlphaLevelOfPlacesCircle, 31, 127, 31);
+        private readonly Color PlacesColorWork = Color.FromArgb(AlphaLevelOfPlacesCircle, 255, 163, 31);
+        private readonly Color PlacesColorFrequent = Color.FromArgb(AlphaLevelOfPlacesCircle, 127, 127, 255);
+        private readonly Color PlacesColorKnown = Color.FromArgb(AlphaLevelOfPlacesCircle, 255, 127, 127);
+        private readonly Color PlacesColorUnknown = Color.FromArgb(AlphaLevelOfPlacesCircle, 127, 127, 127);
+        private const int AlphaLevelOfPlacesCircle = 127;
         private const double RadianToDegrees = 180.0 / Math.PI;
-        private const double Wgs84A = 6378137.0; //length of the earth's semi-major axis
+        private const double Wgs84A = 6378137.0; // Length of the earth's semi-major axis
         private const double Wgs84B = 6356752.3;
-        private Places.App app = Application.Current as Places.App;
-        private Geopoint currentLocation;
-        private bool fullScreen;
+
+        private Places.App _app = Application.Current as Places.App;
+        private Monitor _monitor;
+        private Geolocator _geolocator;
+        private CancellationTokenSource _cancellationTokenSource;
+        private DeviceAccessInformation _accessInfo;
+        private Geopoint _currentLocation;
+        private bool _fullScreen;
 
         /// <summary>
         /// Initialize SensorCore and find the current position
         /// </summary>
         private async void InitCore()
         {
-            if (monitor == null)
+            if (_monitor == null)
             {
                 // This is not implemented by the simulator, uncomment for the PlaceMonitor
                 if (await Monitor.IsSupportedAsync())
                 {
                     // Init SensorCore
-                    if (await CallSensorcoreApiAsync(async () => { monitor = await Monitor.GetDefaultAsync(); }))
+                    if (await CallSensorcoreApiAsync(async () => { _monitor = await Monitor.GetDefaultAsync(); }))
                     {
                         Debug.WriteLine("PlaceMonitor initialized.");
+
                         // Update list of known places
                         await UpdateKnownPlacesAsync();
                         HomeButton.IsEnabled = true;
                         WorkButton.IsEnabled = true;
                         FrequentButton.IsEnabled = true;
                         CurrentButton.IsEnabled = true;
-                        // Focus on home
-                        OnHomeClicked(null, null);
                     }
                     else return;
                 }
                 else
                 {
-                    MessageDialog dialog;
-                    dialog = new MessageDialog("Your device doesn't support Motion Data. Application will be closed", "Information");
-                    dialog.Commands.Add(new UICommand("OK"));
+                    var loader = new Windows.ApplicationModel.Resources.ResourceLoader();
+                    MessageDialog dialog = new MessageDialog(loader.GetString("NoMotionDataSupport/Text"), loader.GetString("Information/Text"));
+                    dialog.Commands.Add(new UICommand(loader.GetString("OkButton/Text")));
                     await dialog.ShowAsync();
                     new System.Threading.ManualResetEvent(false).WaitOne(500);
                     Application.Current.Exit();
@@ -78,31 +84,35 @@ namespace Places
                 // Init Geolocator
                 try
                 {
-                    accessInfo = DeviceAccessInformation.CreateFromDeviceClass(DeviceClass.Location);
-                    accessInfo.AccessChanged += OnAccessChanged;
+                    _accessInfo = DeviceAccessInformation.CreateFromDeviceClass(DeviceClass.Location);
+                    _accessInfo.AccessChanged += OnAccessChanged;
                     // Get a geolocator object
-                    geolocator = new Geolocator();
+                    _geolocator = new Geolocator();
                     // Get cancellation token
-                    cts = new CancellationTokenSource();
-                    CancellationToken token = cts.Token;
-                    Geoposition geoposition = await geolocator.GetGeopositionAsync().AsTask(token);
-                    currentLocation = new Geopoint(new BasicGeoposition()
+                    _cancellationTokenSource = new CancellationTokenSource();
+                    CancellationToken token = _cancellationTokenSource.Token;
+                    Geoposition geoposition = await _geolocator.GetGeopositionAsync().AsTask(token);
+
+                    _currentLocation = new Geopoint(new BasicGeoposition()
                     {
                         Latitude = geoposition.Coordinate.Point.Position.Latitude,
                         Longitude = geoposition.Coordinate.Point.Position.Longitude
                     });
+
+                    // Focus on the current location
+                    OnCurrentClicked(this, null);
                 }
                 catch (UnauthorizedAccessException)
                 {
-                    if (DeviceAccessStatus.DeniedByUser == accessInfo.CurrentStatus)
+                    if (DeviceAccessStatus.DeniedByUser == _accessInfo.CurrentStatus)
                     {
                         Debug.WriteLine("Location has been disabled by the user. Enable access through the settings charm.");
                     }
-                    else if (DeviceAccessStatus.DeniedBySystem == accessInfo.CurrentStatus)
+                    else if (DeviceAccessStatus.DeniedBySystem == _accessInfo.CurrentStatus)
                     {
                         Debug.WriteLine("Location has been disabled by the system. The administrator of the device must enable location access through the location control panel.");
                     }
-                    else if (DeviceAccessStatus.Unspecified == accessInfo.CurrentStatus)
+                    else if (DeviceAccessStatus.Unspecified == _accessInfo.CurrentStatus)
                     {
                         Debug.WriteLine("Location has been disabled by unspecified source. The administrator of the device may need to enable location access through the location control panel, then enable access through the settings charm.");
                     }
@@ -121,21 +131,21 @@ namespace Places
                 }
                 finally
                 {
-                    cts = null;
+                    _cancellationTokenSource = null;
                 }
             }
             // Activate and deactivate the SensorCore when the visibility of the app changes
             Window.Current.VisibilityChanged += async (oo, ee) =>
             {
-                if (monitor != null)
+                if (_monitor != null)
                 {
                     if (!ee.Visible)
                     {
-                        await CallSensorcoreApiAsync(async () => { await monitor.DeactivateAsync(); });
+                        await CallSensorcoreApiAsync(async () => { await _monitor.DeactivateAsync(); });
                     }
                     else
                     {
-                        await CallSensorcoreApiAsync(async () => { await monitor.ActivateAsync(); });
+                        await CallSensorcoreApiAsync(async () => { await _monitor.ActivateAsync(); });
                     }
                 }
             };
@@ -237,7 +247,7 @@ namespace Places
                     }
                     else if (state == GeofenceState.Entered)
                     {
-                        foreach (Place place in app.Places)
+                        foreach (Place place in _app.Places)
                         {
                             if (place.Id.ToString() == geofence.Id)
                             {
@@ -249,7 +259,7 @@ namespace Places
                     }
                     else if (state == GeofenceState.Exited)
                     {
-                        foreach (Place place in app.Places)
+                        foreach (Place place in _app.Places)
                         {
                             if (place.Id.ToString() == geofence.Id)
                             {
@@ -272,8 +282,8 @@ namespace Places
         {
             var circle = new MapPolygon
             {
-                FillColor = circleColor, //Color.FromArgb(75, 144, 238, 144),
-                StrokeColor = circleColor, //Color.FromArgb(75, 0, 128, 0),
+                FillColor = circleColor,
+                StrokeColor = circleColor,
                 StrokeDashed = false,
                 StrokeThickness = 1,
 
@@ -321,15 +331,15 @@ namespace Places
         /// <returns>Asynchronous task</returns>
         private async Task UpdateKnownPlacesAsync()
         {
-            if (monitor != null)
+            if (_monitor != null)
             {
-                app.Places = null;
+                _app.Places = null;
 
                 PlacesMap.MapElements.Clear();
     
-                if (await CallSensorcoreApiAsync(async () => { app.Places = await monitor.GetKnownPlacesAsync();}))
+                if (await CallSensorcoreApiAsync(async () => { _app.Places = await _monitor.GetKnownPlacesAsync();}))
                 {
-                    foreach (var p in app.Places)
+                    foreach (var p in _app.Places)
                     {
                         System.Diagnostics.Debug.WriteLine("Place {0} radius {1} Latitude {2} Longitude {3} ",p.Kind, p.Radius, p.Position.Latitude, p.Position.Longitude);
                         var icon = new MapIcon();
@@ -342,20 +352,22 @@ namespace Places
 
                         switch (p.Kind)
                         {
-                                case PlaceKind.Known:
-                                    color = Color.FromArgb(128, 250, 150, 150);
-                                    break;
-                                case PlaceKind.Home:
-                                    color = Color.FromArgb(128, 150, 150, 10);
-                                    break;
-                                case PlaceKind.Work:
-                                    color = Color.FromArgb(128, 250, 180, 5);
-                                    break;
-                                default:
-                                    color = Color.FromArgb(128, 250, 150, 150);
-                                    break;
+                            case PlaceKind.Home:
+                                color = PlacesColorHome;
+                                break;
+                            case PlaceKind.Work:
+                                color = PlacesColorWork;
+                                break;
+                            case PlaceKind.Frequent:
+                                color = PlacesColorFrequent;
+                                break;
+                            case PlaceKind.Known:
+                                color = PlacesColorKnown;
+                                break;
+                            default:
+                                color = PlacesColorUnknown;
+                                break;
                         }
-
 
                         PlacesMap.MapElements.Add(icon);
                         CreateGeofence(p.Id.ToString(), p.Position.Latitude, p.Position.Longitude, p.Radius, color);
@@ -388,7 +400,7 @@ namespace Places
                 {
                     case SenseError.LocationDisabled:
                     case SenseError.SenseDisabled:
-                        if (!app.SensorCoreActivationStatus.Ongoing)
+                        if (!_app.SensorCoreActivationStatus.Ongoing)
                         {
                             this.Frame.Navigate(typeof(ActivateSensorCore));
                         }
@@ -406,9 +418,9 @@ namespace Places
 
         private void FullScreeButton_OnTapped(object sender, TappedRoutedEventArgs e)
         {
-            fullScreen = !fullScreen;
+            _fullScreen = !_fullScreen;
 
-            if (fullScreen)
+            if (_fullScreen)
             {
                 CmdBar.Visibility = Visibility.Collapsed;
                 TopPanel.Visibility = Visibility.Collapsed;

@@ -19,23 +19,20 @@ using Places.Common;
 
 namespace Places
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class MapPage : Page
     {
-        private NavigationHelper navigationHelper;
-        private ObservableDictionary defaultViewModel = new ObservableDictionary();
-        private int chosenFrequentId = -1;
+        private NavigationHelper _navigationHelper;
+        private ObservableDictionary _defaultViewModel = new ObservableDictionary();
+        private int _chosenFrequentId = -1;
 
 
         public MapPage()
         {
             this.InitializeComponent();
 
-            this.navigationHelper = new NavigationHelper(this);
-            this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
-            this.navigationHelper.SaveState += this.NavigationHelper_SaveState;
+            this._navigationHelper = new NavigationHelper(this);
+            this._navigationHelper.LoadState += this.NavigationHelper_LoadState;
+            this._navigationHelper.SaveState += this.NavigationHelper_SaveState;
 
             PlacesMap.MapServiceToken = "xxx";
         }
@@ -45,7 +42,7 @@ namespace Places
         /// </summary>
         public NavigationHelper NavigationHelper
         {
-            get { return this.navigationHelper; }
+            get { return this._navigationHelper; }
         }
 
         /// <summary>
@@ -54,7 +51,7 @@ namespace Places
         /// </summary>
         public ObservableDictionary DefaultViewModel
         {
-            get { return this.defaultViewModel; }
+            get { return this._defaultViewModel; }
         }
 
         /// <summary>
@@ -102,8 +99,8 @@ namespace Places
         /// handlers that cannot cancel the navigation request.</param>
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
-            this.navigationHelper.OnNavigatedTo(e);
-            ActivateSensorCoreStatus status = app.SensorCoreActivationStatus;
+            this._navigationHelper.OnNavigatedTo(e);
+            ActivateSensorCoreStatus status = _app.SensorCoreActivationStatus;
 
             if (e.NavigationMode == NavigationMode.Back && status.Ongoing)
             {
@@ -111,9 +108,9 @@ namespace Places
 
                 if (status.ActivationRequestResult != ActivationRequestResults.AllEnabled)
                 {
-                    MessageDialog dialog;
-                    dialog = new MessageDialog("This application doesn't function without MotionData. Application will be closed", "Information");
-                    dialog.Commands.Add(new UICommand("OK"));
+                    var loader = new ResourceLoader();
+                    MessageDialog dialog = new MessageDialog(loader.GetString("NoLocationOrMotionDataError/Text"), loader.GetString("Information/Text"));
+                    dialog.Commands.Add(new UICommand(loader.GetString("OkButton/Text")));
                     await dialog.ShowAsync();
                     new System.Threading.ManualResetEvent(false).WaitOne(500);
                     Application.Current.Exit();
@@ -125,7 +122,7 @@ namespace Places
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            this.navigationHelper.OnNavigatedFrom(e);
+            this._navigationHelper.OnNavigatedFrom(e);
         }
 
         private void OnTapped(MapControl sender, MapInputEventArgs args)
@@ -155,9 +152,9 @@ namespace Places
         {
             bool found = false;
 
-            if (app.Places != null)
+            if (_app.Places != null)
             {
-                foreach (Place place in app.Places)
+                foreach (Place place in _app.Places)
                 {
                     if (place.Kind == PlaceKind.Home)
                     {
@@ -173,7 +170,7 @@ namespace Places
             if (!found)
             {
                 var loader = new ResourceLoader();
-                var text = loader.GetString("HomeNotFound");
+                var text = loader.GetString("HomeNotFound") + " " + loader.GetString("DontWorry/Text");
                 var header = loader.GetString("LocationNotDefined");
                 var dialog = new MessageDialog(text, header);
                 
@@ -185,7 +182,7 @@ namespace Places
         {
             bool found = false;
 
-            foreach (Place place in app.Places)
+            foreach (Place place in _app.Places)
             {
                 if (place.Kind == PlaceKind.Work)
                 {
@@ -199,7 +196,7 @@ namespace Places
             if (!found)
             {
                 var loader = new ResourceLoader();
-                var text = loader.GetString("WorkNotFound");
+                var text = loader.GetString("WorkNotFound") + " " + loader.GetString("DontWorry/Text");
                 var header = loader.GetString("LocationNotDefined");
                 var dialog = new MessageDialog(text, header);
 
@@ -209,14 +206,14 @@ namespace Places
 
         private void OnCurrentClicked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
-            PlacesMap.Center = currentLocation;
+            PlacesMap.Center = _currentLocation;
             PlacesMap.ZoomLevel = 16;
         }
 
         private void OnFrequentClicked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
             var notHomeNorWork =
-                from place in app.Places
+                from place in _app.Places
                 where place.Kind != PlaceKind.Home && place.Kind != PlaceKind.Work
                 orderby place.Kind descending
                 select place;
@@ -226,14 +223,14 @@ namespace Places
                 return;
             }
 
-            chosenFrequentId++;
+            _chosenFrequentId++;
 
-            if (chosenFrequentId >= notHomeNorWork.Count())
+            if (_chosenFrequentId >= notHomeNorWork.Count())
             {
-                chosenFrequentId = 0;
+                _chosenFrequentId = 0;
             }
 
-            PlacesMap.Center = new Geopoint(notHomeNorWork.ElementAt(chosenFrequentId).Position);
+            PlacesMap.Center = new Geopoint(notHomeNorWork.ElementAt(_chosenFrequentId).Position);
             PlacesMap.ZoomLevel = 16;
         }
 

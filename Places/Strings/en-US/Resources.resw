@@ -117,17 +117,14 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AboutButton.Label" xml:space="preserve">
+    <value>about</value>
+  </data>
   <data name="AboutDescription.Text" xml:space="preserve">
-    <value>This developer sample demonstrates Lumia SensorCore SDK Places API functionality.</value>
+    <value>The Places developer sample application demonstrates Lumia SensorCore SDK's Place Monitor API functionality.</value>
   </data>
   <data name="AboutDisclaimer.Text" xml:space="preserve">
-    <value>This Nokia developer example application has been created to provide tips and best practice guidance for software developers and app designers, and may not have all the features you would expect in a commercial product. This application is published in Store as a free software as it may also have value to regular Nokia phone users. The source code and documentation of this example can be downloaded from Nokia Developer website.</value>
-  </data>
-  <data name="AboutHyperlinkProject.Text" xml:space="preserve">
-    <value>Nokia Developer website</value>
-  </data>
-  <data name="AboutMore.Text" xml:space="preserve">
-    <value>Learn more and get the latest version of this software from:</value>
+    <value>This developer example application has been created to provide tips and best practice guidance for software developers and app designers, and may not have all the features you would expect in a commercial product. This application is published in Store as a free software as it may also have value to regular phone users. The source code and more information about this sample can be found in GitHub:</value>
   </data>
   <data name="AboutPage.Text" xml:space="preserve">
     <value>about</value>
@@ -138,6 +135,12 @@
   <data name="Application.Text" xml:space="preserve">
     <value>LUMIA SENSORCORE SAMPLE</value>
   </data>
+  <data name="ApplicationName.Text" xml:space="preserve">
+    <value>Places</value>
+  </data>
+  <data name="DontWorry.Text" xml:space="preserve">
+    <value>Don't worry, just give your phone some time to determine this location.</value>
+  </data>
   <data name="Header.Text" xml:space="preserve">
     <value>PLACES</value>
   </data>
@@ -145,7 +148,10 @@
     <value>hide</value>
   </data>
   <data name="HomeNotFound" xml:space="preserve">
-    <value>Location of your home has not yet been figured.</value>
+    <value>The location of your home has not been figured out yet.</value>
+  </data>
+  <data name="Information.Text" xml:space="preserve">
+    <value>Information</value>
   </data>
   <data name="LocationNotDefined" xml:space="preserve">
     <value>Location not defined</value>
@@ -153,14 +159,23 @@
   <data name="NavigationFailedExceptionMessage" xml:space="preserve">
     <value>Navigation failed.</value>
   </data>
+  <data name="NoLocationOrMotionDataError.Text" xml:space="preserve">
+    <value>This application does not function without location and motion data. The application will be closed.</value>
+  </data>
+  <data name="NoMotionDataSupport.Text" xml:space="preserve">
+    <value>Your device does not support motion data. The application will be closed.</value>
+  </data>
+  <data name="OkButton.Text" xml:space="preserve">
+    <value>OK</value>
+  </data>
   <data name="Pivot.Title" xml:space="preserve">
     <value>PLACES</value>
   </data>
   <data name="Version.Text" xml:space="preserve">
-    <value>Version: </value>
+    <value>version</value>
     <comment>.</comment>
   </data>
   <data name="WorkNotFound" xml:space="preserve">
-    <value>Location of your work has not yet been figured.</value>
+    <value>The location of your work place has not been resolved yet.</value>
   </data>
 </root>

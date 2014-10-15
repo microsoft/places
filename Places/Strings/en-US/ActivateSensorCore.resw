@@ -127,7 +127,7 @@
     <value>This application requires location data in order to work correctly</value>
   </data>
   <data name="LocationActivationTitle.Text" xml:space="preserve">
-    <value>Switch on location sensor</value>
+    <value>Switch on location data</value>
   </data>
   <data name="MotionDataActivationButton.Content" xml:space="preserve">
     <value>Switch on</value>

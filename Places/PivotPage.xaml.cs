@@ -15,7 +15,7 @@ namespace Places
 {
     public sealed partial class PivotPage : Page
     {
-        private readonly NavigationHelper navigationHelper;
+        private readonly NavigationHelper _navigationHelper;
 
         public PivotPage()
         {
@@ -23,9 +23,9 @@ namespace Places
 
             this.NavigationCacheMode = NavigationCacheMode.Required;
 
-            this.navigationHelper = new NavigationHelper(this);
-            this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
-            this.navigationHelper.SaveState += this.NavigationHelper_SaveState;
+            this._navigationHelper = new NavigationHelper(this);
+            this._navigationHelper.LoadState += this.NavigationHelper_LoadState;
+            this._navigationHelper.SaveState += this.NavigationHelper_SaveState;
         }
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace Places
         /// </summary>
         public NavigationHelper NavigationHelper
         {
-            get { return this.navigationHelper; }
+            get { return this._navigationHelper; }
         }
 
         /// <summary>
@@ -126,12 +126,12 @@ namespace Places
         /// handlers that cannot cancel the navigation request.</param>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            this.navigationHelper.OnNavigatedTo(e);
+            this._navigationHelper.OnNavigatedTo(e);
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            this.navigationHelper.OnNavigatedFrom(e);
+            this._navigationHelper.OnNavigatedFrom(e);
         }
 
         #endregion

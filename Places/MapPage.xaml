@@ -62,7 +62,7 @@
                 </AppBarButton.Icon>
             </AppBarButton>
             <CommandBar.SecondaryCommands>
-                <AppBarButton x:Uid="AboutButton" x:Name="AboutButton" Label="About..." Click="OnAboutClicked"/>
+                <AppBarButton x:Uid="AboutButton" x:Name="AboutButton" Label="" Click="OnAboutClicked"/>
             </CommandBar.SecondaryCommands>
         </CommandBar>
     </Page.BottomAppBar>

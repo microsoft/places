@@ -1,15 +1,16 @@
 Places
-==========
+======
 
 Places is a sample application demonstrating the usage of Place Monitor API and 
 geofences in Windows Phone 8.1. This application shows all the known places on 
 the map, draws a circle of known radius around them, and creates equal-sized 
-geofences on those locations. The user is able to switch between the known places 
-by using the map or the application bar buttons.
+geofences on those locations. The user is able to switch between the known
+places by using the map or the application bar buttons.
 
 For more information on implementation, visit Nokia Lumia Developer's Library: 
 http://developer.nokia.com/resources/library/Lumia/sensorcore-sdk/samples.html
 http://developer.nokia.com/resources/library/Lumia/sensorcore-sdk/place-monitor-api.html
+
 
 1. Instructions
 --------------------------------------------------------------------------------
@@ -76,14 +77,19 @@ available online at https://github.com/nokia-developer/places/blob/master/Licens
 4. Version history
 --------------------------------------------------------------------------------
 
+* Version 1.2: Updated to use version 1.0 of Lumia SensorCore SDK, added support
+  for frequent places and few other minor updates.
 * Version 1.0: The first release.
 
+
 5. Downloads
----------
+--------------------------------------------------------------------------------
 
 | Project | Release | Download |
 | ------- | --------| -------- |
+| Places | v1.2 | [places-1.2.zip](https://github.com/nokia-developer/places/archive/v1.2.zip) |
 | Places | v1.0 | [places-1.0.zip](https://github.com/nokia-developer/places/archive/v1.0.zip) |
+
 
 6. See also
 --------------------------------------------------------------------------------
