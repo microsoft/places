@@ -71,7 +71,7 @@ file the capabilities required for it to work:
 --------------------------------------------------------------------------------
 
 See the license text file delivered with this project. The license file is also
-available online at https://github.com/nokia-developer/places/blob/master/License.txt
+available online at https://github.com/Microsoft/places/blob/master/License.txt
 
 
 4. Version history
@@ -87,8 +87,8 @@ available online at https://github.com/nokia-developer/places/blob/master/Licens
 
 | Project | Release | Download |
 | ------- | --------| -------- |
-| Places | v1.2 | [places-1.2.zip](https://github.com/nokia-developer/places/archive/v1.2.zip) |
-| Places | v1.0 | [places-1.0.zip](https://github.com/nokia-developer/places/archive/v1.0.zip) |
+| Places | v1.2 | [places-1.2.zip](https://github.com/Microsoft/places/archive/v1.2.zip) |
+| Places | v1.0 | [places-1.0.zip](https://github.com/Microsoft/places/archive/v1.0.zip) |
 
 
 6. See also
@@ -96,9 +96,9 @@ available online at https://github.com/nokia-developer/places/blob/master/Licens
 
 The projects listed below are exemplifying the usage of the SensorCore APIs
 
-* Steps -  https://github.com/nokia-developer/steps
-* Places - https://github.com/nokia-developer/places
-* Tracks - https://github.com/nokia-developer/tracks
-* Activities - https://github.com/nokia-developer/activities
-* Recorder - https://github.com/nokia-developer/recorder
+* Steps -  https://github.com/Microsoft/steps
+* Places - https://github.com/Microsoft/places
+* Tracks - https://github.com/Microsoft/tracks
+* Activities - https://github.com/Microsoft/activities
+* Recorder - https://github.com/Microsoft/recorder
 

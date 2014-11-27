@@ -44,7 +44,7 @@
                         <Run x:Uid="AboutDisclaimer" Text="" Foreground="Black"/>
                     </Paragraph>
                 </RichTextBlock>
-                <HyperlinkButton NavigateUri="https://github.com/nokia-developer/places">
+                <HyperlinkButton NavigateUri="https://github.com/Microsoft/places">
                     <HyperlinkButton.Content>
                         <TextBlock
                             Margin="6,12,0,0"

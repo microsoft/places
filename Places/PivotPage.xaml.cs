@@ -67,7 +67,7 @@ namespace Places
         private void CreatePivotItem(Place place)
         {
             MainGrid.Children.Clear();
-            var pivot = new Pivot {Title = "NOKIA SENSORCORE SAMPLE", Margin = new Thickness(0, 12, 0, 0), Foreground=new SolidColorBrush(Colors.Black) };
+            var pivot = new Pivot {Title = "SENSORCORE SAMPLE", Margin = new Thickness(0, 12, 0, 0), Foreground=new SolidColorBrush(Colors.Black) };
 
             var item = new PivotItem { Header = place.Kind.ToString(), Foreground = new SolidColorBrush(Colors.Black)};
             
