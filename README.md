@@ -7,7 +7,7 @@ the map, draws a circle of known radius around them, and creates equal-sized
 geofences on those locations. The user is able to switch between the known
 places by using the map or the application bar buttons.
 
-For more information on implementation, visit Nokia Lumia Developer's Library: 
+For more information on implementation, visit Lumia Developer's Library: 
 http://developer.nokia.com/resources/library/Lumia/sensorcore-sdk/samples.html
 http://developer.nokia.com/resources/library/Lumia/sensorcore-sdk/place-monitor-api.html
 
