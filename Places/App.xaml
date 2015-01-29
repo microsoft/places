@@ -6,6 +6,5 @@
       <Setter Property="LineHeight" Value="72" />
       <Setter Property="TextLineBounds" Value="Tight" />
     </Style>
-    <!--vm:ViewModelLocator x:Key="Locator" xmlns:vm="using:Places.ViewModel" /-->
   </Application.Resources>
 </Application>

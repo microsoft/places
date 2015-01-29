@@ -8,35 +8,30 @@
     x:Class="Places.MapPage"
     mc:Ignorable="d"
     Background="#A4C400">
-
     <Grid x:Name="LayoutRoot">
         <Grid.ChildrenTransitions>
             <TransitionCollection>
                 <EntranceThemeTransition/>
             </TransitionCollection>
         </Grid.ChildrenTransitions>
-
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-
         <!-- TitlePanel -->
         <StackPanel x:Name="TopPanel" Grid.Row="0" Margin="24,17,0,28" >
             <TextBlock x:Uid="Application" Text="" Style="{ThemeResource TitleTextBlockStyle}" Typography.Capitals="SmallCaps" Foreground="Black"/>
             <TextBlock Text="places" Margin="0,12,0,0" Style="{ThemeResource HeaderTextBlockStyle}" Foreground="Black"/>
         </StackPanel>
-
-        <!--TODO: Content should be placed within the following grid-->
+        <!--Content should be placed within the following grid-->
         <Grid Grid.Row="1" x:Name="ContentRoot" >
             <maps:MapControl x:Name="PlacesMap" Margin="0,0,0,0"
-                             MapTapped="OnTapped" />
+                             MapTapped="OnTapped" ZoomLevel="12"/>
             <SymbolIcon x:Name="FullScreeButton" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,15,31" Symbol="FullScreen" Tapped="FullScreeButton_OnTapped" RenderTransformOrigin="0.5,0.5" Grid.Column="1">
                 <SymbolIcon.RenderTransform>
                     <CompositeTransform ScaleX="2" ScaleY="2"/>
                 </SymbolIcon.RenderTransform>
             </SymbolIcon>
-
         </Grid>
     </Grid>
     <Page.BottomAppBar>

@@ -15,7 +15,6 @@
             </NavigationThemeTransition>
         </TransitionCollection>
     </Page.Transitions>
-
     <Grid x:Name="MainGrid">
     </Grid>
 </Page>

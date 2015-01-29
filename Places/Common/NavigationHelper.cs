@@ -1,4 +1,25 @@
-﻿using System;
+﻿/*	
+Copyright (c) 2015 Microsoft
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE. 
+ */
+using System;
 using System.Collections.Generic;
 using Windows.System;
 using Windows.UI.Core;
@@ -41,7 +62,7 @@ namespace Places.Common
     ///         this.navigationHelper.SaveState += navigationHelper_SaveState;
     ///     }
     ///     
-    ///     private async void navigationHelper_LoadState(object sender, LoadStateEventArgs e)
+    /// async void navigationHelper_LoadState(object sender, LoadStateEventArgs e)
     ///     { }
     ///     private async void navigationHelper_SaveState(object sender, LoadStateEventArgs e)
     ///     { }
@@ -67,10 +88,27 @@ namespace Places.Common
     [Windows.Foundation.Metadata.WebHostHidden]
     public class NavigationHelper : DependencyObject
     {
+        #region Private constants
+        /// <summary>
+        /// Page instance
+        /// </summary>
         private readonly Page page;
+
+        /// <summary>
+        /// RelayCommand instance for go back command
+        /// </summary>
         private RelayCommand goBackCommand;
+
+        /// <summary>
+        /// RelayCommand instance for go forward command
+        /// </summary>
         private RelayCommand goForwardCommand;
+
+        /// <summary>
+        /// Page key
+        /// </summary>
         private string pageKey;
+        #endregion
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NavigationHelper"/> class.
@@ -83,31 +121,24 @@ namespace Places.Common
         public NavigationHelper(Page page)
         {
             this.page = page;
-
             // When this page is part of the visual tree make two changes:
             // 1) Map application view state to visual state for the page
             // 2) Handle keyboard and mouse navigation requests
             this.page.Loaded += (sender, e) =>
             {
                 // Keyboard and mouse navigation only apply when occupying the entire window
-                if (this.page.ActualHeight == Window.Current.Bounds.Height &&
-                    this.page.ActualWidth == Window.Current.Bounds.Width)
+                if (this.page.ActualHeight == Window.Current.Bounds.Height && this.page.ActualWidth == Window.Current.Bounds.Width)
                 {
                     // Listen to the window directly so focus isn't required
-                    Window.Current.CoreWindow.Dispatcher.AcceleratorKeyActivated +=
-                        CoreDispatcher_AcceleratorKeyActivated;
-                    Window.Current.CoreWindow.PointerPressed +=
-                        this.CoreWindow_PointerPressed;
+                    Window.Current.CoreWindow.Dispatcher.AcceleratorKeyActivated += CoreDispatcher_AcceleratorKeyActivated;
+                    Window.Current.CoreWindow.PointerPressed += this.CoreWindow_PointerPressed;
                 }
             };
-
             // Undo the same changes when the page is no longer visible
             this.page.Unloaded += (sender, e) =>
             {
-                Window.Current.CoreWindow.Dispatcher.AcceleratorKeyActivated -=
-                    CoreDispatcher_AcceleratorKeyActivated;
-                Window.Current.CoreWindow.PointerPressed -=
-                    this.CoreWindow_PointerPressed;
+                Window.Current.CoreWindow.Dispatcher.AcceleratorKeyActivated -= CoreDispatcher_AcceleratorKeyActivated;
+                Window.Current.CoreWindow.PointerPressed -= this.CoreWindow_PointerPressed;
             };
         }
 
@@ -145,10 +176,8 @@ namespace Places.Common
                         () => this.GoBack(),
                         () => this.CanGoBack());
                 }
-
                 return this.goBackCommand;
             }
-
             set
             {
                 this.goBackCommand = value;
@@ -173,11 +202,13 @@ namespace Places.Common
                         () => this.GoForward(),
                         () => this.CanGoForward());
                 }
-
                 return this.goForwardCommand;
             }
         }
 
+        /// <summary>
+        /// Gets the current page
+        /// </summary>
         private Frame Frame
         {
             get { return this.page.Frame; }
@@ -244,7 +275,6 @@ namespace Places.Common
         {
             var frameState = SuspensionManager.SessionStateForFrame(this.Frame);
             this.pageKey = "Page-" + this.Frame.BackStackDepth;
-
             if (e.NavigationMode == NavigationMode.New)
             {
                 // Clear existing state for forward navigation when adding a new page to the
@@ -256,7 +286,6 @@ namespace Places.Common
                     nextPageIndex++;
                     nextPageKey = "Page-" + nextPageIndex;
                 }
-
                 // Pass the navigation parameter to the new page
                 if (this.LoadState != null)
                 {
@@ -288,7 +317,6 @@ namespace Places.Common
             {
                 this.SaveState(this, new SaveStateEventArgs(pageState));
             }
-
             frameState[this.pageKey] = pageState;
         }
 
@@ -302,7 +330,6 @@ namespace Places.Common
         private void CoreDispatcher_AcceleratorKeyActivated(CoreDispatcher sender, AcceleratorKeyEventArgs e)
         {
             var virtualKey = e.VirtualKey;
-
             // Only investigate further when Left, Right, or the dedicated Previous or Next keys
             // are pressed
             if ((e.EventType == CoreAcceleratorKeyEventType.SystemKeyDown ||
@@ -317,16 +344,13 @@ namespace Places.Common
                 bool shiftKey = (coreWindow.GetKeyState(VirtualKey.Shift) & downState) == downState;
                 bool noModifiers = !menuKey && !controlKey && !shiftKey;
                 bool onlyAlt = menuKey && !controlKey && !shiftKey;
-
-                if (((int)virtualKey == 166 && noModifiers) ||
-                    (virtualKey == VirtualKey.Left && onlyAlt))
+                if (((int)virtualKey == 166 && noModifiers) || (virtualKey == VirtualKey.Left && onlyAlt))
                 {
                     // When the previous key or Alt+Left are pressed navigate back
                     e.Handled = true;
                     this.GoBackCommand.Execute(null);
                 }
-                else if (((int)virtualKey == 167 && noModifiers) ||
-                    (virtualKey == VirtualKey.Right && onlyAlt))
+                else if (((int)virtualKey == 167 && noModifiers) || (virtualKey == VirtualKey.Right && onlyAlt))
                 {
                     // When the next key or Alt+Right are pressed navigate forward
                     e.Handled = true;
@@ -345,15 +369,11 @@ namespace Places.Common
         private void CoreWindow_PointerPressed(CoreWindow sender, PointerEventArgs e)
         {
             var properties = e.CurrentPoint.Properties;
-
             // Ignore button chords with the left, right, and middle buttons
-            if (properties.IsLeftButtonPressed
-                || properties.IsRightButtonPressed
-                || properties.IsMiddleButtonPressed)
+            if (properties.IsLeftButtonPressed || properties.IsRightButtonPressed || properties.IsMiddleButtonPressed)
             {
                 return;
             }
-
             // If back or foward are pressed (but not both) navigate appropriately
             bool backPressed = properties.IsXButton1Pressed;
             bool forwardPressed = properties.IsXButton2Pressed;
@@ -364,7 +384,6 @@ namespace Places.Common
                 {
                     this.GoBackCommand.Execute(null);
                 }
-
                 if (forwardPressed)
                 {
                     this.GoForwardCommand.Execute(null);
@@ -389,8 +408,7 @@ namespace Places.Common
         /// A dictionary of state preserved by this page during an earlier
         /// session. This will be null the first time a page is visited.
         /// </param>
-        public LoadStateEventArgs(object navigationParameter, Dictionary<string, object> pageState)
-            : base()
+        public LoadStateEventArgs(object navigationParameter, Dictionary<string, object> pageState): base()
         {
             this.NavigationParameter = navigationParameter;
             this.PageState = pageState;
@@ -418,8 +436,7 @@ namespace Places.Common
         /// Initializes a new instance of the <see cref="SaveStateEventArgs"/> class.
         /// </summary>
         /// <param name="pageState">An empty dictionary to be populated with serializable state.</param>
-        public SaveStateEventArgs(Dictionary<string, object> pageState)
-            : base()
+        public SaveStateEventArgs(Dictionary<string, object> pageState): base()
         {
             this.PageState = pageState;
         }

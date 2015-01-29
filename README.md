@@ -7,11 +7,6 @@ the map, draws a circle of known radius around them, and creates equal-sized
 geofences on those locations. The user is able to switch between the known
 places by using the map or the application bar buttons.
 
-For more information on implementation, visit Lumia Developer's Library: 
-http://developer.nokia.com/resources/library/Lumia/sensorcore-sdk/samples.html
-http://developer.nokia.com/resources/library/Lumia/sensorcore-sdk/place-monitor-api.html
-
-
 1. Instructions
 --------------------------------------------------------------------------------
 
@@ -67,31 +62,26 @@ file the capabilities required for it to work:
     </m2:DeviceCapability>
 	
 	
-3. License
+3. Version history
 --------------------------------------------------------------------------------
 
-See the license text file delivered with this project. The license file is also
-available online at https://github.com/Microsoft/places/blob/master/License.txt
-
-
-4. Version history
---------------------------------------------------------------------------------
-
+* Version 1.2.0.1: Some bug fixes made in this release.
 * Version 1.2: Updated to use version 1.0 of Lumia SensorCore SDK, added support
   for frequent places and few other minor updates.
 * Version 1.0: The first release.
 
 
-5. Downloads
+4. Downloads
 --------------------------------------------------------------------------------
 
 | Project | Release | Download |
 | ------- | --------| -------- |
+| Places | v1.2.0.1 | [places-1.2.0.1.zip](https://github.com/Microsoft/places/archive/v1.2.0.1.zip) |
 | Places | v1.2 | [places-1.2.zip](https://github.com/Microsoft/places/archive/v1.2.zip) |
 | Places | v1.0 | [places-1.0.zip](https://github.com/Microsoft/places/archive/v1.0.zip) |
 
 
-6. See also
+5. See also
 --------------------------------------------------------------------------------
 
 The projects listed below are exemplifying the usage of the SensorCore APIs

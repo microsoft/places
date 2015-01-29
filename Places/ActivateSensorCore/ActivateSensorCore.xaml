@@ -8,14 +8,12 @@
     x:Class="Places.ActivateSensorCore"
     mc:Ignorable="d"
     Background="#A4C400">
-
     <Grid x:Name="LayoutRoot">
         <Grid.ChildrenTransitions>
             <TransitionCollection>
                 <EntranceThemeTransition/>
             </TransitionCollection>
         </Grid.ChildrenTransitions>
-
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -23,8 +21,7 @@
         <StackPanel x:Name="TopPanel" Grid.Row="0" Margin="24,17,0,28" >
             <TextBlock x:Uid="Application" Text="" Style="{ThemeResource TitleTextBlockStyle}" Typography.Capitals="SmallCaps" Foreground="Black"/>
             <TextBlock Text="places" Margin="0,12,0,0" Style="{ThemeResource HeaderTextBlockStyle}" Foreground="Black"/>
-        </StackPanel>
-        
+        </StackPanel>      
         <Grid x:Name="MotionDataActivationBox" Grid.Row="1" Visibility="Collapsed" Background="#33000000" Margin="0,0,0,28" VerticalAlignment="Top">
             <Grid Margin="10,10,10,10">
                 <Grid.RowDefinitions>
@@ -35,13 +32,11 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <TextBlock x:Uid="/ActivateSensorCore/MotionDataActivationTitle"  Grid.Row="0" Foreground="{StaticResource PhoneForegroundBrush}" FontSize="36" />
-
                 <TextBlock x:Uid="/ActivateSensorCore/MotionDataActivationExplanation" Grid.Row="1" TextWrapping="Wrap" FontSize="20"/>
                 <Button x:Uid="/ActivateSensorCore/MotionDataActivationButton" Grid.Row="2"   VerticalAlignment="Top" Click="MotionDataActivationButton_Click" HorizontalAlignment="Stretch"/>
                 <Button x:Uid="/ActivateSensorCore/LaterButton" Grid.Row="3" VerticalAlignment="Top" Click="LaterButton_Click" HorizontalAlignment="Stretch"/>
             </Grid>
         </Grid>
-
         <Grid x:Name="LocationActivationBox" Grid.Row="1" Visibility="Collapsed" Background="#33000000" Margin="0,0,0,28" VerticalAlignment="Top">
             <Grid Margin="10,10,10,10">
                 <Grid.RowDefinitions>
@@ -57,6 +52,5 @@
                 <Button x:Uid="/ActivateSensorCore/LaterButton" Grid.Row="3" Content="Activate" VerticalAlignment="Top" HorizontalAlignment="Stretch" Click="LaterButton_Click"/>
             </Grid>
         </Grid>
-
     </Grid>
 </Page>

@@ -1,44 +1,85 @@
-﻿using System;
+﻿/*	
+Copyright (c) 2015 Microsoft
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE. 
+ */
+using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 using Windows.ApplicationModel.Resources;
 using Windows.Devices.Geolocation;
-using Windows.Foundation;
-using Windows.Graphics.Display;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Maps;
 using Windows.UI.Xaml.Navigation;
-
 using Lumia.Sense;
-
 using Places.Common;
 
-
+/// <summary>
+/// The Basic Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
+/// </summary>
 namespace Places
 {
+    /// <summary>
+    /// All the logic releated to the usage of Place Monitor API.
+    /// Shows home, work,and all the known and frequent places (geo-locations) on the map.
+    /// </summary>
     public sealed partial class MapPage : Page
     {
+        #region Private members
+        /// <summary>
+        /// Navigation Helper instance
+        /// </summary>
         private NavigationHelper _navigationHelper;
+
+        /// <summary>
+        /// View model instance
+        /// This can be changed to a strongly typed view model
+        /// </summary>
         private ObservableDictionary _defaultViewModel = new ObservableDictionary();
+
+        /// <summary>
+        /// Frequent id to return the place position 
+        /// </summary>
         private int _chosenFrequentId = -1;
 
+        /// <summary>
+        /// Constructs a new ResourceLoader object
+        /// </summary>
+        private ResourceLoader _resourceLoader = new ResourceLoader();
+        #endregion
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public MapPage()
         {
             this.InitializeComponent();
-
             this._navigationHelper = new NavigationHelper(this);
             this._navigationHelper.LoadState += this.NavigationHelper_LoadState;
             this._navigationHelper.SaveState += this.NavigationHelper_SaveState;
-
             PlacesMap.MapServiceToken = "xxx";
         }
 
         /// <summary>
-        /// Gets the <see cref="NavigationHelper"/> associated with this <see cref="Page"/>.
+        /// Gets the <see cref="NavigationHelper"/> associated with this <see cref="Page"/>
         /// </summary>
         public NavigationHelper NavigationHelper
         {
@@ -66,8 +107,7 @@ namespace Places
         /// a dictionary of state preserved by this page during an earlier
         /// session.  The state will be null the first time a page is visited.</param>
         private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
-        {
-            
+        {       
         }
 
         /// <summary>
@@ -83,48 +123,43 @@ namespace Places
         }
 
         #region NavigationHelper registration
-
         /// <summary>
-        /// The methods provided in this section are simply used to allow
-        /// NavigationHelper to respond to the page's navigation methods.
-        /// <para>
-        /// Page specific logic should be placed in event handlers for the  
-        /// <see cref="NavigationHelper.LoadState"/>
-        /// and <see cref="NavigationHelper.SaveState"/>.
-        /// The navigation parameter is available in the LoadState method 
-        /// in addition to page state preserved during an earlier session.
-        /// </para>
+        /// Called when a page becomes the active page in a frame.
         /// </summary>
-        /// <param name="e">Provides data for navigation methods and event
-        /// handlers that cannot cancel the navigation request.</param>
+        /// <param name="e">Event arguments</param>
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             this._navigationHelper.OnNavigatedTo(e);
             ActivateSensorCoreStatus status = _app.SensorCoreActivationStatus;
-
-            if (e.NavigationMode == NavigationMode.Back && status.Ongoing)
+            if (e.NavigationMode == NavigationMode.Back && status.onGoing)
             {
-                status.Ongoing = false;
-
-                if (status.ActivationRequestResult != ActivationRequestResults.AllEnabled)
+                status.onGoing = false;
+                if (status.activationRequestResult != ActivationRequestResults.AllEnabled)
                 {
-                    var loader = new ResourceLoader();
-                    MessageDialog dialog = new MessageDialog(loader.GetString("NoLocationOrMotionDataError/Text"), loader.GetString("Information/Text"));
-                    dialog.Commands.Add(new UICommand(loader.GetString("OkButton/Text")));
+                    MessageDialog dialog = new MessageDialog(_resourceLoader.GetString("NoLocationOrMotionDataError/Text"), _resourceLoader.GetString("Information/Text"));
+                    dialog.Commands.Add(new UICommand(_resourceLoader.GetString("OkButton/Text")));
                     await dialog.ShowAsync();
                     new System.Threading.ManualResetEvent(false).WaitOne(500);
                     Application.Current.Exit();
                 }
             }
-
             InitCore();
         }
 
+        /// <summary>
+        /// Called when a page is no longer the active page in a frame.
+        /// </summary>
+        /// <param name="e">Event arguments</param>
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             this._navigationHelper.OnNavigatedFrom(e);
         }
 
+        /// <summary>
+        /// Navigates to details page for the selected place
+        /// </summary>
+        /// <param name="sender">The sender of the event</param>
+        /// <param name="args">Provides data about user input for the map tapped</param>
         private void OnTapped(MapControl sender, MapInputEventArgs args)
         {
             try
@@ -132,11 +167,10 @@ namespace Places
                 var elementList = PlacesMap.FindMapElementsAtOffset(args.Position);
                 foreach (var element in elementList)
                 {
-                    var icon = element as MapIcon;
-
-                    if (icon != null)
+                    var mapIcon = element as MapIcon;
+                    if (mapIcon != null)
                     {
-                        this.Frame.Navigate(typeof(PivotPage), icon);
+                        this.Frame.Navigate(typeof(PivotPage), mapIcon);
                         break;
                     }
                 }
@@ -148,10 +182,14 @@ namespace Places
         }
         #endregion
 
+        /// <summary>
+        /// Display home on the map, if is recognised
+        /// </summary>
+        /// <param name="sender">The sender of the event</param>
+        /// <param name="e">Contains state information and event data associated with a routed event.</param>
         private async void OnHomeClicked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
-            bool found = false;
-
+            bool foundPlace = false;
             if (_app.Places != null)
             {
                 foreach (Place place in _app.Places)
@@ -160,56 +198,65 @@ namespace Places
                     {
                         PlacesMap.Center = new Geopoint(place.Position);
                         PlacesMap.ZoomLevel = 16;
-                        found = true;
+                        foundPlace = true;
                         break;
                     }
                 }
             }
-
             // It takes some time for SensorCore SDK to figure out your known locations
-            if (!found)
+            if (!foundPlace)
             {
-                var loader = new ResourceLoader();
-                var text = loader.GetString("HomeNotFound") + " " + loader.GetString("DontWorry/Text");
-                var header = loader.GetString("LocationNotDefined");
-                var dialog = new MessageDialog(text, header);
-                
-                await dialog.ShowAsync();
+                var messageText = _resourceLoader.GetString("HomeNotFound") + " " + _resourceLoader.GetString("DontWorry/Text");
+                var messageHeader = _resourceLoader.GetString("LocationNotDefined");
+                var messageDialog = new MessageDialog(messageText, messageHeader);
+                await messageDialog.ShowAsync();
             }
         }
 
+        /// <summary>
+        /// Display work on the map, if is recognised
+        /// </summary>
+        /// <param name="sender">The sender of the event</param>
+        /// <param name="e">Contains state information and event data associated with a routed event.</param>
         private async void OnWorkClicked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
-            bool found = false;
-
+            bool foundPlace = false;
             foreach (Place place in _app.Places)
             {
                 if (place.Kind == PlaceKind.Work)
                 {
                     PlacesMap.Center = new Geopoint(place.Position);
                     PlacesMap.ZoomLevel = 16;
-                    found = true;
+                    foundPlace = true;
                     break;
                 }
             }
             // It takes some time for SensorCore SDK to figure out your known locations
-            if (!found)
+            if (!foundPlace)
             {
-                var loader = new ResourceLoader();
-                var text = loader.GetString("WorkNotFound") + " " + loader.GetString("DontWorry/Text");
-                var header = loader.GetString("LocationNotDefined");
-                var dialog = new MessageDialog(text, header);
-
-                await dialog.ShowAsync();
+                var messageText = _resourceLoader.GetString("WorkNotFound") + " " + _resourceLoader.GetString("DontWorry/Text");
+                var messageHeader = _resourceLoader.GetString("LocationNotDefined");
+                var messageDialog = new MessageDialog(messageText, messageHeader);
+                await messageDialog.ShowAsync();
             }
         }
 
+        /// <summary>
+        /// Display on the map the current location
+        /// </summary>
+        /// <param name="sender">The sender of the event</param>
+        /// <param name="e">Contains state information and event data associated with a routed event.</param>
         private void OnCurrentClicked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
             PlacesMap.Center = _currentLocation;
             PlacesMap.ZoomLevel = 16;
         }
 
+        /// <summary>
+        /// Display frequent place on the map, if is recognised
+        /// </summary>
+        /// <param name="sender">The sender of the event</param>
+        /// <param name="e">Contains state information and event data associated with a routed event.</param>
         private void OnFrequentClicked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
             var notHomeNorWork =
@@ -217,23 +264,24 @@ namespace Places
                 where place.Kind != PlaceKind.Home && place.Kind != PlaceKind.Work
                 orderby place.Kind descending
                 select place;
-
             if (notHomeNorWork.Count() == 0)
             {
                 return;
             }
-
             _chosenFrequentId++;
-
             if (_chosenFrequentId >= notHomeNorWork.Count())
             {
                 _chosenFrequentId = 0;
             }
-
             PlacesMap.Center = new Geopoint(notHomeNorWork.ElementAt(_chosenFrequentId).Position);
             PlacesMap.ZoomLevel = 16;
         }
 
+        /// <summary>
+        /// Navigate to about page
+        /// </summary>
+        /// <param name="sender">The sender of the event</param>
+        /// <param name="e">Contains state information and event data associated with a routed event.</param>
         private void OnAboutClicked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
             this.Frame.Navigate(typeof(AboutPage));
