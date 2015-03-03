@@ -1,4 +1,5 @@
 ﻿/*	
+The MIT License (MIT)
 Copyright (c) 2015 Microsoft
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -59,7 +60,7 @@ namespace Places
             this.Loaded += (sender, args) =>
             {
                 var ver = Windows.ApplicationModel.Package.Current.Id.Version;
-                VersionNumber.Text = string.Format("{0}.{1}.{2}", ver.Major, ver.Minor, ver.Revision);
+                VersionNumber.Text = string.Format("{0}.{1}.{2}.{3}", ver.Major, ver.Minor,ver.Build, ver.Revision);
             };
         }
 

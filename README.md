@@ -64,7 +64,7 @@ file the capabilities required for it to work:
 	
 3. Version history
 --------------------------------------------------------------------------------
-
+* Version 1.2.0.5: Updated to use latest Lumia SensorCore SDK 1.1 Preview
 * Version 1.2.0.1: Some bug fixes made in this release.
 * Version 1.2: Updated to use version 1.0 of Lumia SensorCore SDK, added support
   for frequent places and few other minor updates.
@@ -76,6 +76,7 @@ file the capabilities required for it to work:
 
 | Project | Release | Download |
 | ------- | --------| -------- |
+| Places | v1.2.0.5 | [places-1.2.0.5.zip](https://github.com/Microsoft/places/archive/v1.2.0.5.zip) |
 | Places | v1.2.0.1 | [places-1.2.0.1.zip](https://github.com/Microsoft/places/archive/v1.2.0.1.zip) |
 | Places | v1.2 | [places-1.2.zip](https://github.com/Microsoft/places/archive/v1.2.zip) |
 | Places | v1.0 | [places-1.0.zip](https://github.com/Microsoft/places/archive/v1.0.zip) |

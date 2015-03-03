@@ -1,4 +1,5 @@
 ﻿/*	
+The MIT License (MIT)
 Copyright (c) 2015 Microsoft
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,12 +24,11 @@ using System;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Maps;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using Places.Common;
 using Places.Utilities;
-using Lumia.Sense;
+using Windows.Devices.Geolocation;
 
 /// <summary>
 /// The Pivot Application template is documented at http://go.microsoft.com/fwlink/?LinkID=391641
@@ -40,11 +40,16 @@ namespace Places
     /// </summary>   
     public sealed partial class PivotPage : Page
     {
-        #region Private members   
+        #region Private members
         /// <summary>
         /// Navigation Helper instance
         /// </summary>
         private readonly NavigationHelper _navigationHelper;
+
+        /// <summary>
+        /// Address of a Geopoint location
+        /// </summary>
+        private string _addressString;
         #endregion
 
         /// <summary>
@@ -56,7 +61,6 @@ namespace Places
             this.NavigationCacheMode = NavigationCacheMode.Required;
             this._navigationHelper = new NavigationHelper(this);
             this._navigationHelper.LoadState += this.NavigationHelper_LoadState;
-            this._navigationHelper.SaveState += this.NavigationHelper_SaveState;
         }
 
         /// <summary>
@@ -82,10 +86,11 @@ namespace Places
         {
             if (e.NavigationParameter != null)
             {
-                var mapIcon = e.NavigationParameter as MapIcon;
+                var mapIcon = e.NavigationParameter.ToString();
                 if (mapIcon != null)
                 {
-                    CreatePivotItem(MapExtensions.GetValue(mapIcon));
+
+                    CreatePivotItem(mapIcon);
                 }
             }
         }
@@ -94,18 +99,33 @@ namespace Places
         /// Create a Pivot and PivotItem, and fill with place info
         /// </summary>
         /// <param name="place">Place instance</param>
-        private void CreatePivotItem(Place place)
+        private async void CreatePivotItem(string place)
         {
+            // Get address of a Geopoint location  
             MainGrid.Children.Clear();
+            string[] split = place.Split(new Char[] { '\n', ',' });
+            Geopoint geoPoint = new Geopoint(new BasicGeoposition()
+        {
+            Latitude = Convert.ToDouble(split[1]),
+            Longitude = Convert.ToDouble(split[2])
+        });
             var newPivot = new Pivot { Title = "MICROSOFT SENSORCORE SAMPLE", Margin = new Thickness(0, 12, 0, 0), Foreground = new SolidColorBrush(Colors.Black) };
-            var pivotItem = new PivotItem { Header = place.Kind.ToString(), Foreground = new SolidColorBrush(Colors.Black)};           
+            var pivotItem = new PivotItem { Header = split[0].ToString(), Foreground = new SolidColorBrush(Colors.Black), FontSize = 20 };
             var stackPanel = new StackPanel();
-            stackPanel.Children.Add(CreateTextBlock("Latitude:", place.Position.Latitude.ToString()));
-            stackPanel.Children.Add(CreateTextBlock("Longitude:", place.Position.Longitude.ToString()));
-            stackPanel.Children.Add(CreateTextBlock("Radius:", place.Radius.ToString() + " m"));
+            // Get address of a Geopoint location  
+            var addressTask = GeoLocationHelper.GetAddress(geoPoint);
+            stackPanel.Children.Add(CreateTextBlock("Latitude:", split[1].ToString()));
+            stackPanel.Children.Add(CreateTextBlock("Longitude:", split[2].ToString()));
+            stackPanel.Children.Add(CreateTextBlock("Radius:", split[3].ToString() + " m"));
+            stackPanel.Children.Add(CreateTextBlock("Length of stay:", split[4].ToString()));
+            stackPanel.Children.Add(CreateTextBlock("Total length of stay:", split[5].ToString()));
+            stackPanel.Children.Add(CreateTextBlock("Total visit count:", split[6].ToString()));
             pivotItem.Content = stackPanel;
-            newPivot.Items.Add(pivotItem);           
+            newPivot.Items.Add(pivotItem);
             MainGrid.Children.Add(newPivot);
+            _addressString = await addressTask;
+            //Add address to the pivot
+            stackPanel.Children.Add(CreateTextBlock("Address:", _addressString));
         }
 
         /// <summary>
@@ -134,7 +154,7 @@ namespace Places
         /// <param name="e">Event data that provides an empty dictionary to be populated with
         /// serializable state.</param>
         private void NavigationHelper_SaveState(object sender, SaveStateEventArgs e)
-        {          
+        {
         }
 
         #region NavigationHelper registration

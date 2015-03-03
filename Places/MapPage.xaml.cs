@@ -1,4 +1,5 @@
-﻿/*	
+﻿/*
+The MIT License (MIT)
 Copyright (c) 2015 Microsoft
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -31,6 +32,10 @@ using Windows.UI.Xaml.Controls.Maps;
 using Windows.UI.Xaml.Navigation;
 using Lumia.Sense;
 using Places.Common;
+using System.Collections.Generic;
+using Windows.Globalization;
+using Places.Utilities;
+using System.Threading;
 
 /// <summary>
 /// The Basic Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
@@ -50,6 +55,11 @@ namespace Places
         private NavigationHelper _navigationHelper;
 
         /// <summary>
+        /// Map Page instance
+        /// </summary>
+        public static MapPage _instanceMap;
+
+        /// <summary>
         /// View model instance
         /// This can be changed to a strongly typed view model
         /// </summary>
@@ -64,6 +74,16 @@ namespace Places
         /// Constructs a new ResourceLoader object
         /// </summary>
         private ResourceLoader _resourceLoader = new ResourceLoader();
+
+        /// <summary>
+        /// List with days for the filter option
+        /// </summary>
+        private readonly List<DaySelectionItem> _optionList = new List<DaySelectionItem>();
+
+        /// <summary>
+        /// Selected day for filter option
+        /// </summary>
+        private DaySelectionItem _selectedDay;
         #endregion
 
         /// <summary>
@@ -72,10 +92,16 @@ namespace Places
         public MapPage()
         {
             this.InitializeComponent();
+            if(_instanceMap == null)
+               _instanceMap = this;
+            this.menuFlyout = new MenuFlyout();
             this._navigationHelper = new NavigationHelper(this);
             this._navigationHelper.LoadState += this.NavigationHelper_LoadState;
             this._navigationHelper.SaveState += this.NavigationHelper_SaveState;
             PlacesMap.MapServiceToken = "xxx";
+            FillDateList();
+            this.listSource.Source = _optionList;
+            _selectedDay = _optionList.Last();
         }
 
         /// <summary>
@@ -143,7 +169,20 @@ namespace Places
                     Application.Current.Exit();
                 }
             }
-            InitCore();
+            PlacesMap.Center = new Geopoint(new BasicGeoposition()
+            {
+                Latitude = 60.17,
+                Longitude = 24.83
+            });
+            if (ActivityReader.Instance().ActivityMonitorProperty != null)
+            {
+                ActivityReader.Instance().ActivityMonitorProperty.ReadingChanged += ActivityReader.Instance().activityMonitor_ReadingChanged;
+            }
+            if (!iLaunched)
+            {
+                iLaunched = true;
+                await InitCore();    
+            }              
         }
 
         /// <summary>
@@ -153,34 +192,94 @@ namespace Places
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             this._navigationHelper.OnNavigatedFrom(e);
-        }
-
-        /// <summary>
-        /// Navigates to details page for the selected place
-        /// </summary>
-        /// <param name="sender">The sender of the event</param>
-        /// <param name="args">Provides data about user input for the map tapped</param>
-        private void OnTapped(MapControl sender, MapInputEventArgs args)
-        {
-            try
+            if (ActivityReader.Instance().ActivityMonitorProperty != null)
             {
-                var elementList = PlacesMap.FindMapElementsAtOffset(args.Position);
-                foreach (var element in elementList)
-                {
-                    var mapIcon = element as MapIcon;
-                    if (mapIcon != null)
-                    {
-                        this.Frame.Navigate(typeof(PivotPage), mapIcon);
-                        break;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
+                ActivityReader.Instance().ActivityMonitorProperty.ReadingChanged -= ActivityReader.Instance().activityMonitor_ReadingChanged;
             }
         }
         #endregion
+
+        /// <summary>
+        /// Fill the list with current day of week, and in descending order rest of the weekdays
+        /// </summary>
+        private void FillDateList()
+        {
+            int today = (int)DateTime.Now.DayOfWeek; // Current day
+            int count = 0;
+            for (int i = today; i >= 0; i--)
+            {
+                var item = new DaySelectionItem { Day = DateTime.Now.Date - TimeSpan.FromDays(count) };
+                var nameOfDay = System.Globalization.DateTimeFormatInfo.CurrentInfo.DayNames[i];
+                // Add an indicator to current day
+                if (count == 0)
+                {
+                    nameOfDay += " " + _resourceLoader.GetString("Today");
+                }
+                GeographicRegion userRegion = new GeographicRegion();
+                var userDateFormat = new Windows.Globalization.DateTimeFormatting.DateTimeFormatter("shortdate", new[] { userRegion.Code });
+                var dateDefault = userDateFormat.Format(item.Day);
+                item.Name = nameOfDay + " " + dateDefault;
+                _optionList.Add(item);
+                count++;
+                // First day of the week, but not all weekdays still listed,
+                // continue from the last weekday
+                if (i == 0 && count <= 6)
+                {
+                    i = 7;
+                }
+                else if (count == 10) // All weekdays listed, exit the loop
+                {
+                    i = 0;
+                }
+            }
+            // Add the option to show everything
+            _optionList.Add(new DaySelectionItem { Name = _resourceLoader.GetString("All") });
+        }
+
+        /// <summary>
+        /// Opens a menu flyout with options to choose from
+        /// </summary>
+        /// <param name="sender">The control that the action is for.</param>
+        /// <param name="args">Parameter that contains the event data.</param>
+        private void SelectButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (menuFlyout != null)
+            {            
+                menuFlyout.Items.Clear();
+                for (int i = 0; i < listSource.View.Count; i++)
+                {
+                    flyoutItem = new MenuFlyoutItem();
+                    flyoutItem.Text = this.listSource.View[i].ToString();
+                    flyoutItem.FontSize = 22;
+                    flyoutItem.FlowDirection = Windows.UI.Xaml.FlowDirection.LeftToRight;
+                    flyoutItem.Click += flyoutItem_Click;
+                    menuFlyout.Items.Add(flyoutItem);
+                }
+                menuFlyout.Items.Add(new MenuFlyoutItem());
+                menuFlyout.ShowAt(CmdBar);
+            }
+        }
+
+        /// <summary>
+        /// Draws the route for all the tracks in the selected day.
+        /// </summary>
+        /// <param name="sender">The control that the action is for.</param>
+        /// <param name="args">Parameter that contains the event data.</param>
+        private async void flyoutItem_Click(object sender, RoutedEventArgs e)
+        {
+            var flyoutItem = e.OriginalSource as MenuFlyoutItem;
+            try
+            {
+                for (int i = 0; i < listSource.View.Count; i++)
+                    if (flyoutItem.Text.Contains(listSource.View[i].ToString()))
+                        _selectedDay = (DaySelectionItem)listSource.View[i];              
+                await UpdateKnownPlacesAsync();
+                FilterTime.Text = _selectedDay.Name;
+            }
+            catch (Exception)
+            {
+            }
+        }
 
         /// <summary>
         /// Display home on the map, if is recognised
@@ -197,7 +296,7 @@ namespace Places
                     if (place.Kind == PlaceKind.Home)
                     {
                         PlacesMap.Center = new Geopoint(place.Position);
-                        PlacesMap.ZoomLevel = 16;
+                        PlacesMap.ZoomLevel = 13;
                         foundPlace = true;
                         break;
                     }
@@ -221,14 +320,17 @@ namespace Places
         private async void OnWorkClicked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
             bool foundPlace = false;
-            foreach (Place place in _app.Places)
+             if (_app.Places != null)
             {
-                if (place.Kind == PlaceKind.Work)
+                foreach (Place place in _app.Places)
                 {
-                    PlacesMap.Center = new Geopoint(place.Position);
-                    PlacesMap.ZoomLevel = 16;
-                    foundPlace = true;
-                    break;
+                    if (place.Kind == PlaceKind.Work)
+                    {
+                        PlacesMap.Center = new Geopoint(place.Position);
+                        PlacesMap.ZoomLevel = 13;
+                        foundPlace = true;
+                        break;
+                    }
                 }
             }
             // It takes some time for SensorCore SDK to figure out your known locations
@@ -246,10 +348,20 @@ namespace Places
         /// </summary>
         /// <param name="sender">The sender of the event</param>
         /// <param name="e">Contains state information and event data associated with a routed event.</param>
-        private void OnCurrentClicked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        private async void OnCurrentClicked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
-            PlacesMap.Center = _currentLocation;
-            PlacesMap.ZoomLevel = 16;
+            if (_currentLocation == null)
+            {
+                var text = _resourceLoader.GetString("CurrentNotFound") + " " + _resourceLoader.GetString("DontWorry/Text");
+                var header = _resourceLoader.GetString("LocationNotDefined");
+                var dialog = new MessageDialog(text, header);
+                await dialog.ShowAsync();
+            }
+            else
+            {
+                PlacesMap.Center = _currentLocation;
+                PlacesMap.ZoomLevel = 13;
+            }
         }
 
         /// <summary>
@@ -257,24 +369,61 @@ namespace Places
         /// </summary>
         /// <param name="sender">The sender of the event</param>
         /// <param name="e">Contains state information and event data associated with a routed event.</param>
-        private void OnFrequentClicked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        private async void OnFrequentClicked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
-            var notHomeNorWork =
-                from place in _app.Places
-                where place.Kind != PlaceKind.Home && place.Kind != PlaceKind.Work
-                orderby place.Kind descending
-                select place;
-            if (notHomeNorWork.Count() == 0)
+            if (_app.Places != null)
             {
+                var notHomeNorWork =
+                    from place in _app.Places
+                    where place.Kind != PlaceKind.Home && place.Kind != PlaceKind.Work
+                    orderby place.Kind descending
+                    select place;
+                if (notHomeNorWork.Count() == 0)
+                {
+                    var text = _resourceLoader.GetString("FrequentNotFound") + " " + _resourceLoader.GetString("DontWorry/Text");
+                    var header = _resourceLoader.GetString("LocationNotDefined");
+                    var dialog = new MessageDialog(text, header);
+                    await dialog.ShowAsync();
+                    return;
+                }
+                _chosenFrequentId++;
+                if (_chosenFrequentId >= notHomeNorWork.Count())
+                {
+                    _chosenFrequentId = 0;
+                }
+                PlacesMap.Center = new Geopoint(notHomeNorWork.ElementAt(_chosenFrequentId).Position);
+                PlacesMap.ZoomLevel = 13;
+            }
+            else
+            {
+                var text = _resourceLoader.GetString("FrequentNotFound") + " " + _resourceLoader.GetString("DontWorry/Text");
+                var header = _resourceLoader.GetString("LocationNotDefined");
+                var dialog = new MessageDialog(text, header);
+                await dialog.ShowAsync();
                 return;
             }
-            _chosenFrequentId++;
-            if (_chosenFrequentId >= notHomeNorWork.Count())
+        }
+
+        /// <summary>
+        /// Get history button click event handler
+        /// </summary>
+        /// <param name="sender">Sender object</param>
+        /// <param name="e">Event arguments</param>
+        private async void OnPollHistory(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        {
+            // Fetch complete stack of places
+            if (resultStr.Count != 0)
             {
-                _chosenFrequentId = 0;
+                // Pass list of places to HistoryPage
+                this.Frame.Navigate(typeof(HistoryPage), resultStr);
             }
-            PlacesMap.Center = new Geopoint(notHomeNorWork.ElementAt(_chosenFrequentId).Position);
-            PlacesMap.ZoomLevel = 16;
+            else
+            {
+                // Show message if no history data 
+                MessageDialog dialog = new MessageDialog(_resourceLoader.GetString("NoHistoryData/Text"));
+                dialog.Commands.Add(new UICommand(_resourceLoader.GetString("OkButton/Text")));
+                await dialog.ShowAsync();
+            }
         }
 
         /// <summary>

@@ -21,37 +21,31 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE. 
  */
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Places
+namespace Places.Utilities
 {
     /// <summary>
-    /// Enum to declare the motion data settings status
+    /// Helper class to select the days from a list
     /// </summary>
-    public enum ActivationRequestResults
-    {
-        AllEnabled,
-        AskMeLater,
-        NoAndDontAskAgain,
-        NotAvailableYet
-    };
-
-    /// <summary>
-    /// Describes SensorCore Status 
-    /// </summary>
-    public class ActivateSensorCoreStatus
+    public class DaySelectionItem
     {
         /// <summary>
-        /// ActivationRequestResults instance
+        /// Name of the selected day
         /// </summary>
-        public ActivationRequestResults activationRequestResult;
+        public string Name { get; set; }
 
         /// <summary>
-        /// Check if the motion data dialog is initialized
+        /// Selected day in DateTime format
         /// </summary>
-        public bool onGoing = false;
+        public DateTime Day { get; set; }
+
+        /// <summary>
+        /// Convert to string
+        /// </summary>
+        /// <returns>Name in string format</returns>
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }

@@ -8,7 +8,10 @@
     x:Class="Places.MapPage"
     mc:Ignorable="d"
     Background="#A4C400">
-    <Grid x:Name="LayoutRoot">
+    <Page.Resources>
+        <CollectionViewSource x:Name="listSource"/>
+    </Page.Resources>
+    <Grid x:Name="LayoutRoot">        
         <Grid.ChildrenTransitions>
             <TransitionCollection>
                 <EntranceThemeTransition/>
@@ -26,7 +29,8 @@
         <!--Content should be placed within the following grid-->
         <Grid Grid.Row="1" x:Name="ContentRoot" >
             <maps:MapControl x:Name="PlacesMap" Margin="0,0,0,0"
-                             MapTapped="OnTapped" ZoomLevel="12"/>
+                            ZoomLevel="13"/>
+            <TextBlock x:Name="FilterTime" FontSize="24" TextAlignment="Right" Width="480" Height="30" HorizontalAlignment="Right" VerticalAlignment="Top" Foreground="#7F000000" Margin="5,5"/>
             <SymbolIcon x:Name="FullScreeButton" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,15,31" Symbol="FullScreen" Tapped="FullScreeButton_OnTapped" RenderTransformOrigin="0.5,0.5" Grid.Column="1">
                 <SymbolIcon.RenderTransform>
                     <CompositeTransform ScaleX="2" ScaleY="2"/>
@@ -58,6 +62,18 @@
             </AppBarButton>
             <CommandBar.SecondaryCommands>
                 <AppBarButton x:Uid="AboutButton" x:Name="AboutButton" Label="" Click="OnAboutClicked"/>
+                <AppBarButton x:Uid="HistoryButton" x:Name="HistoryButton" Label="" Click="OnPollHistory"/>
+                <AppBarButton x:Uid="FilterButton" x:Name="FilterButton" Label="" Click="SelectButton_Click">
+                        <MenuFlyout x:Name="menuFlyout">
+                            <MenuFlyout.MenuFlyoutPresenterStyle>
+                                <Style TargetType="MenuFlyoutPresenter">
+                                    <Setter Property="BorderBrush" Value="Blue"/>
+                                    <Setter Property="BorderThickness" Value="5"/>
+                                </Style>
+                            </MenuFlyout.MenuFlyoutPresenterStyle>
+                        <MenuFlyoutItem x:Name="flyoutItem" Background="Black" Click="flyoutItem_Click" Margin="0,0,20.833,0"/>
+                        </MenuFlyout>
+                </AppBarButton>
             </CommandBar.SecondaryCommands>
         </CommandBar>
     </Page.BottomAppBar>

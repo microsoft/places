@@ -1,4 +1,5 @@
 ﻿/*	
+The MIT License (MIT)
 Copyright (c) 2015 Microsoft
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -39,6 +40,9 @@ using Windows.Devices.Geolocation.Geofencing;
 using System.Collections.Generic;
 using Monitor = Lumia.Sense.PlaceMonitor;
 using Windows.ApplicationModel.Resources;
+using Windows.Storage.Streams;
+using System.Globalization;
+using Windows.Foundation;
 
 /// <summary>
 /// The Basic Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
@@ -56,6 +60,11 @@ namespace Places
         /// Home color mapping
         /// </summary>
         private readonly Color PlacesColorHome = Color.FromArgb(AlphaLevelOfPlacesCircle, 31, 127, 31);
+
+        /// <summary>
+        /// holds all the pushpins in the map
+        /// </summary>
+        List<PushPin> pins = null;
 
         /// <summary>
         /// Work color mapping
@@ -116,14 +125,29 @@ namespace Places
         private Places.App _app = Application.Current as Places.App;
 
         /// <summary>
+        ///  List of places
+        /// </summary>
+        private List<string> resultStr = new List<string>();
+
+        /// <summary>
         /// Place monitor instance
         /// </summary>
         private Monitor _placeMonitor;
 
         /// <summary>
+        /// check to see launching finished or not
+        /// </summary>
+        private bool iLaunched = false;
+
+        /// <summary>
         /// Geolocator instance
         /// </summary>
         private Geolocator _geoLocator;
+
+        /// <summary>
+        /// List of activities for a place
+        /// </summary>
+        List<Activity> activitiesToShow = new List<Activity>();
 
         /// <summary>
         /// CancellationToken Source instance
@@ -149,81 +173,122 @@ namespace Places
         /// <summary>
         /// Initialize SensorCore and find the current position
         /// </summary>
-        private async void InitCore()
+        private async Task InitCore()
         {
-            if (_placeMonitor == null)
+            try
             {
-                // This is not implemented by the simulator, uncomment for the PlaceMonitor
-                if (await Monitor.IsSupportedAsync())
+                // Following code assumes that device has new software(SensorCoreSDK1.1 based)
+                if (!(await PlaceMonitor.IsSupportedAsync()))
                 {
-                    // Init SensorCore
-                    if (await CallSensorcoreApiAsync(async () => { _placeMonitor = await Monitor.GetDefaultAsync(); }))
-                    {
-                        Debug.WriteLine("PlaceMonitor initialized.");
-                        // Update list of known places
-                        await UpdateKnownPlacesAsync();
-                        HomeButton.IsEnabled = true;
-                        WorkButton.IsEnabled = true;
-                        FrequentButton.IsEnabled = true;
-                        CurrentButton.IsEnabled = true;
-                    }
-                    else return;
+                    MessageDialog dlg = new MessageDialog("Unfortunately this device does not support viewing visited places");
+                    await dlg.ShowAsync();
+                    Application.Current.Exit();
                 }
                 else
                 {
-                    var loader = new ResourceLoader();
-                    MessageDialog dialog = new MessageDialog(loader.GetString("NoMotionDataSupport/Text"), loader.GetString("Information/Text"));
-                    dialog.Commands.Add(new UICommand(loader.GetString("OkButton/Text")));
-                    await dialog.ShowAsync();
-                    new System.Threading.ManualResetEvent(false).WaitOne(500);
-                    Application.Current.Exit();
-                }
-                // Init Geolocator
-                try
-                {
-                    _accessInfo = DeviceAccessInformation.CreateFromDeviceClass(DeviceClass.Location);
-                    _accessInfo.AccessChanged += OnAccessChanged;
-                    // Get a geolocator object
-                    _geoLocator = new Geolocator();
-                    // Get cancellation token
-                    _cancellationTokenSource = new CancellationTokenSource();
-                    CancellationToken token = _cancellationTokenSource.Token;
-                    Geoposition geoposition = await _geoLocator.GetGeopositionAsync().AsTask(token);
-                    _currentLocation = new Geopoint(new BasicGeoposition()
+                    uint apiSet = await SenseHelper.GetSupportedApiSetAsync();
+                    MotionDataSettings settings = await SenseHelper.GetSettingsAsync();
+                    if (!settings.LocationEnabled)
                     {
-                        Latitude = geoposition.Coordinate.Point.Position.Latitude,
-                        Longitude = geoposition.Coordinate.Point.Position.Longitude
-                    });
-                    // Focus on the current location
-                    OnCurrentClicked(this, null);
-                }
-                catch (UnauthorizedAccessException)
-                {
-                    if (DeviceAccessStatus.DeniedByUser == _accessInfo.CurrentStatus)
-                    {
-                        Debug.WriteLine("Location has been disabled by the user. Enable access through the settings charm.");
+                        MessageDialog dlg = new MessageDialog("In order to collect and view visited places you need to enable location in system settings. Do you want to open settings now? if no, applicatoin will exit", "Information");
+                        dlg.Commands.Add(new UICommand("Yes", new UICommandInvokedHandler(async (cmd) => await SenseHelper.LaunchLocationSettingsAsync())));
+                        dlg.Commands.Add(new UICommand("No", new UICommandInvokedHandler((cmd) => { Application.Current.Exit(); })));
+                        await dlg.ShowAsync();
                     }
-                    else if (DeviceAccessStatus.DeniedBySystem == _accessInfo.CurrentStatus)
+                    if (!settings.PlacesVisited)
                     {
-                        Debug.WriteLine("Location has been disabled by the system. The administrator of the device must enable location access through the location control panel.");
-                    }
-                    else if (DeviceAccessStatus.Unspecified == _accessInfo.CurrentStatus)
-                    {
-                        Debug.WriteLine("Location has been disabled by unspecified source. The administrator of the device may need to enable location access through the location control panel, then enable access through the settings charm.");
+                        MessageDialog dlg = null;
+                        if (settings.Version < 2)
+                        {
+                            //device which has old motion data settings.
+                            //this is equal to motion data settings on/off in old system settings(SDK1.0 based)
+                            dlg = new MessageDialog("In order to collect and view visited places you need to enable Motion data in Motion data settings. Do you want to open settings now? if no, application will exit", "Information");
+                        }
+                        else
+                        {
+                            dlg = new MessageDialog("In order to collect and view visited places you need to 'enable Places visited' and 'DataQuality to detailed' in Motion data settings. Do you want to open settings now? if no, application will exit", "Information");
+                        }
+                        dlg.Commands.Add(new UICommand("Yes", new UICommandInvokedHandler(async (cmd) => await SenseHelper.LaunchSenseSettingsAsync())));
+                        dlg.Commands.Add(new UICommand("No", new UICommandInvokedHandler((cmd) =>{ Application.Current.Exit(); })));
+                        await dlg.ShowAsync();
                     }
                 }
-                catch (Exception ex)
+            }
+            catch (Exception)
+            {
+            }
+            // This is not implemented by the simulator, uncomment for the PlaceMonitor                      
+            if (_placeMonitor == null)
+            {
+                // Init SensorCore
+                if (await CallSensorcoreApiAsync(async () => { _placeMonitor = await Monitor.GetDefaultAsync(); }))
                 {
-                    if ((uint)ex.HResult == 0x80004004)
-                    {
-                        // The application does not have the right capability or the location master switch is off
-                        Debug.WriteLine("location is disabled in phone settings.");
-                    }
+                    Debug.WriteLine("PlaceMonitor initialized.");
+                    // Update list of known places
+                    await UpdateKnownPlacesAsync();
+                    HomeButton.IsEnabled = true;
+                    WorkButton.IsEnabled = true;
+                    FrequentButton.IsEnabled = true;
+                    CurrentButton.IsEnabled = true;
+                    await ActivityReader.Instance().Initialize();
+                    resultStr = await GetPlacesHistory();
                 }
-                finally
+                else return;
+            }
+            else
+            {
+                var loader = new ResourceLoader();
+                MessageDialog dialog = new MessageDialog(loader.GetString("NoMotionDataSupport/Text"), loader.GetString("Information/Text"));
+                dialog.Commands.Add(new UICommand(loader.GetString("OkButton/Text")));
+                await dialog.ShowAsync();
+                new System.Threading.ManualResetEvent(false).WaitOne(500);
+                Application.Current.Exit();
+            }
+            // Init Geolocator
+            try
+            {
+                _accessInfo = DeviceAccessInformation.CreateFromDeviceClass(DeviceClass.Location);
+                _accessInfo.AccessChanged += OnAccessChanged;
+                // Get a geolocator object
+                _geoLocator = new Geolocator();
+                // Get cancellation token
+                _cancellationTokenSource = new CancellationTokenSource();
+                CancellationToken token = _cancellationTokenSource.Token;
+                Geoposition geoposition = await _geoLocator.GetGeopositionAsync().AsTask(token);
+                _currentLocation = new Geopoint(new BasicGeoposition()
                 {
-                    _cancellationTokenSource = null;
+                    Latitude = geoposition.Coordinate.Point.Position.Latitude,
+                    Longitude = geoposition.Coordinate.Point.Position.Longitude
+                });
+                // Focus on the current location
+                OnCurrentClicked(this, null);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                if (DeviceAccessStatus.DeniedByUser == _accessInfo.CurrentStatus)
+                {
+                    Debug.WriteLine("Location has been disabled by the user. Enable access through the settings charm.");
                 }
+                else if (DeviceAccessStatus.DeniedBySystem == _accessInfo.CurrentStatus)
+                {
+                    Debug.WriteLine("Location has been disabled by the system. The administrator of the device must enable location access through the location control panel.");
+                }
+                else if (DeviceAccessStatus.Unspecified == _accessInfo.CurrentStatus)
+                {
+                    Debug.WriteLine("Location has been disabled by unspecified source. The administrator of the device may need to enable location access through the location control panel, then enable access through the settings charm.");
+                }
+            }
+            catch (Exception ex)
+            {
+                if ((uint)ex.HResult == 0x80004004)
+                {
+                    // The application does not have the right capability or the location master switch is off
+                    Debug.WriteLine("location is disabled in phone settings.");
+                }
+            }
+            finally
+            {
+                _cancellationTokenSource = null;
             }
             // Activate and deactivate the SensorCore when the visibility of the app changes
             Window.Current.VisibilityChanged += async (oo, ee) =>
@@ -284,7 +349,7 @@ namespace Places
         {
             if (GeofenceMonitor.Current.Geofences.All(v => v.Id != fenceKey))
             {
-                var position = new BasicGeoposition {Latitude = latitude, Longitude = longitude, Altitude = 0.0};
+                var position = new BasicGeoposition { Latitude = latitude, Longitude = longitude, Altitude = 0.0 };
                 CreateCircle(position, radius, fenceColor);
                 // The geofence is a circular region
                 var geocircle = new Geocircle(position, radius);
@@ -381,19 +446,19 @@ namespace Places
         /// <returns>List of points</returns>
         public static List<BasicGeoposition> CreateGeoCircle(BasicGeoposition center, double radiusValue, int numberOfPoints = 360)
         {
-           var locations = new List<BasicGeoposition>();
-           var radius = radiusValue / 1000;
-           double latCenter = center.Latitude * DegreesToRadian;
-           double lonCenter = center.Longitude * DegreesToRadian;
-           double distance = radius / MEAN_RADIUS;
-           for (int i = 0; i <= numberOfPoints; i++)
-           {
-               double angle = i * DegreesToRadian;
-               var latitude = Math.Asin(Math.Sin(latCenter) * Math.Cos(distance) + Math.Cos(latCenter) * Math.Sin(distance) * Math.Cos(angle));
-               var longitude = ((lonCenter + Math.Atan2(Math.Sin(angle) * Math.Sin(distance) * Math.Cos(latCenter), Math.Cos(distance) - Math.Sin(latCenter) * Math.Sin(latitude)) + Math.PI) % (Math.PI * 2)) - Math.PI;
-               locations.Add(new BasicGeoposition { Latitude = latitude * RadianToDegrees, Longitude = longitude * RadianToDegrees });
-           }
-           return locations;                   
+            var locations = new List<BasicGeoposition>();
+            var radius = radiusValue / 1000;
+            double latCenter = center.Latitude * DegreesToRadian;
+            double lonCenter = center.Longitude * DegreesToRadian;
+            double distance = radius / MEAN_RADIUS;
+            for (int i = 0; i <= numberOfPoints; i++)
+            {
+                double angle = i * DegreesToRadian;
+                var latitude = Math.Asin(Math.Sin(latCenter) * Math.Cos(distance) + Math.Cos(latCenter) * Math.Sin(distance) * Math.Cos(angle));
+                var longitude = ((lonCenter + Math.Atan2(Math.Sin(angle) * Math.Sin(distance) * Math.Cos(latCenter), Math.Cos(distance) - Math.Sin(latCenter) * Math.Sin(latitude)) + Math.PI) % (Math.PI * 2)) - Math.PI;
+                locations.Add(new BasicGeoposition { Latitude = latitude * RadianToDegrees, Longitude = longitude * RadianToDegrees });
+            }
+            return locations;
         }
 
         /// <summary>
@@ -405,19 +470,41 @@ namespace Places
             if (_placeMonitor != null)
             {
                 _app.Places = null;
-                PlacesMap.MapElements.Clear();  
-                if (await CallSensorcoreApiAsync(async () => { _app.Places = await _placeMonitor.GetKnownPlacesAsync();}))
-                {
-                    if (_app.Places.Count > 0)
+                PlacesMap.MapElements.Clear();
+                PlacesMap.Children.Clear();
+                if (await CallSensorcoreApiAsync(async () =>
+                { // Get selected day places, else all places
+                    if (_selectedDay != null && !_selectedDay.Name.Equals("All", StringComparison.CurrentCultureIgnoreCase))
                     {
+                        System.Diagnostics.Debug.WriteLine("GetPlace: " + _selectedDay.Name);
+                        _app.Places = await _placeMonitor.GetPlaceHistoryAsync(_selectedDay.Day, TimeSpan.FromHours(24));
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("Places: Get all known places");
+                        _app.Places = await _placeMonitor.GetKnownPlacesAsync();
+                    }
+                }))
+                {
+                    // Make sure that there were Places for the timespan
+                    if (_app.Places != null && _app.Places.Count > 0)
+                    {
+                        PlacesMap.Children.Clear();
+                        if (pins != null)
+                        {
+                            pins.Clear();
+                            pins = null;
+                        }
+                        pins = new List<PushPin>();
+                        int i = 0;
                         foreach (var p in _app.Places)
                         {
-                            System.Diagnostics.Debug.WriteLine("Place {0} radius {1} Latitude {2} Longitude {3} ", p.Kind, p.Radius, p.Position.Latitude, p.Position.Longitude);
-                            var mapIcon = new MapIcon();
-                            MapExtensions.SetValue(mapIcon, p);
-                            mapIcon.NormalizedAnchorPoint = new Windows.Foundation.Point(0.5, 0.5);
-                            mapIcon.Location = new Geopoint(p.Position);
-                            mapIcon.Title = p.Kind.ToString();
+                            System.Diagnostics.Debug.WriteLine("Place {0} radius {1} Latitude {2} Longitude {3} Total visit count {4} Total length of stay {5} Length of stay {6} Kind {7} ", p.Kind, p.Radius, p.Position.Latitude, p.Position.Longitude, p.TotalVisitCount, p.TotalLengthOfStay, p.LengthOfStay, p.Kind);
+                            pins.Add(new PushPin(p, p.Kind.ToString()));
+                            MapControl.SetLocation(pins[i], new Geopoint(p.Position));
+                            MapControl.SetNormalizedAnchorPoint(pins[i], new Point(0.15, 1));
+                            PlacesMap.Children.Add(pins[i]);
+                            i = i + 1;
                             Color placesColor;
                             //Set for each type of a place a certain color and set custom image for the MapIcon
                             switch (p.Kind)
@@ -438,8 +525,6 @@ namespace Places
                                     placesColor = PlacesColorUnknown;
                                     break;
                             }
-                            // Use MapElements collection to add a custom image, text and location to MapIcon
-                            PlacesMap.MapElements.Add(mapIcon);
                             CreateGeofence(p.Id.ToString(), p.Position.Latitude, p.Position.Longitude, p.Radius, placesColor);
                         }
                     }
@@ -453,7 +538,7 @@ namespace Places
         /// </summary>
         /// <param name="action">The function delegate to execute asynchronously when one task in the tasks completes.</param>
         /// <returns><c>true</c> if call was successful, <c>false</c> otherwise</returns>
-        private async Task<bool> CallSensorcoreApiAsync(Func<Task> action)
+        public async Task<bool> CallSensorcoreApiAsync(Func<Task> action)
         {
             Exception failure = null;
             try
@@ -475,9 +560,13 @@ namespace Places
                             this.Frame.Navigate(typeof(ActivateSensorCore));
                         }
                         return false;
+                    case SenseError.GeneralFailure:
+                        return false;
+                    case SenseError.IncompatibleSDK:
+                        MessageDialog dialog2 = new MessageDialog("This application has become outdated. Please update to the latest version.", "Information");
+                        await dialog2.ShowAsync();
+                        return false;
                     default:
-                        MessageDialog dialog = new MessageDialog("Failure: " + SenseHelper.GetSenseError(failure.HResult) + " while initializing Motion data. Application will exit.", "");
-                        await dialog.ShowAsync();
                         return false;
                 }
             }
@@ -504,6 +593,74 @@ namespace Places
                 TopPanel.Visibility = Visibility.Visible;
                 FullScreeButton.Symbol = Symbol.FullScreen;
             }
+        }
+
+        /// <summary>
+        /// Retrieves the places history
+        /// </summary>
+        /// <returns>String of all places history</returns>
+        private async Task<List<string>> GetPlacesHistory()
+        {
+            IList<string> resultStrFinal = new List<string>();
+            IList<Place> result = null;
+            if (_placeMonitor != null)
+            {
+                // Returns time ordered list of places visited during given time period
+                await CallSensorcoreApiAsync(async () =>
+                {
+                    result = await _placeMonitor.GetPlaceHistoryAsync(DateTime.Today - TimeSpan.FromDays(10), TimeSpan.FromDays(10));
+                });
+                // Returns list of activies occured during given time period
+                await CallSensorcoreApiAsync(async () =>
+                {
+                    ActivityReader.Instance().History = await ActivityReader.Instance().ActivityMonitorProperty.GetActivityHistoryAsync(DateTime.Today - TimeSpan.FromDays(10), TimeSpan.FromDays(10));
+                });
+                if (result != null)
+                {
+                    IEnumerable<Place> reverse = result.AsEnumerable().Reverse();
+                    for (int i = 1; i < reverse.Count(); i++)
+                    {
+                        activitiesToShow.Clear();
+                        for (int j = 1; j < ActivityReader.Instance().History.Count; j++)
+                        {
+                            // Compare time of entry to the last location and the current location with the activity timestamp
+                            // Retrieve the activities in a list
+                            if ((ActivityReader.Instance().History.ElementAt(j).Timestamp.ToLocalTime() >= reverse.ElementAt(i - 1).Timestamp.ToLocalTime()) && (ActivityReader.Instance().History.ElementAt(j).Timestamp.ToLocalTime() < reverse.ElementAt(i).Timestamp.ToLocalTime()))
+                            {
+                                if (!activitiesToShow.Contains(ActivityReader.Instance().History.ElementAt(j).Mode))
+                                {
+                                    //Add the activity to the list
+                                    activitiesToShow.Add(ActivityReader.Instance().History.ElementAt(j).Mode);
+                                }
+                            }
+                        }
+                        string time = reverse.ElementAt(i).Timestamp.ToString("MMM dd yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+                        var resultStr = "Place : " + reverse.ElementAt(i).Kind.ToString() + "\nTimestamp : " + time + "\nLenght Of Stay : " + reverse.ElementAt(i).LengthOfStay.ToString() + "\nTotal Lenght Of Stay : " + reverse.ElementAt(i).TotalLengthOfStay.ToString() + "\nTotal Visit Count : " + reverse.ElementAt(i).TotalVisitCount.ToString() + DisplayMembers(activitiesToShow);
+                        resultStrFinal.Add(resultStr);
+                    }
+                }
+            }
+            // Returns a list with details of the places history
+            return resultStrFinal.ToList();
+        }
+
+        /// <summary>
+        /// Display activities for given list
+        /// </summary>
+        /// <param name="activities">List of activities</param>
+        /// <returns>String item</returns>  
+        public string DisplayMembers(List<Activity> activities)
+        {
+            string displayActivities = string.Empty;
+            if (activities.Count != 0)
+            {
+                displayActivities = "\nActivities: " + string.Join(", ", activities.ToList());
+            }
+            else
+            {
+                displayActivities = "\nActivities: Idle";
+            }
+            return displayActivities;
         }
     }
 }

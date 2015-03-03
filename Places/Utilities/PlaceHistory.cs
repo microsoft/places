@@ -1,4 +1,4 @@
-﻿/*
+﻿/*	
 The MIT License (MIT)
 Copyright (c) 2015 Microsoft
 
@@ -20,38 +20,21 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE. 
  */
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Places
+namespace Places.Utilities
 {
     /// <summary>
-    /// Enum to declare the motion data settings status
+    /// Class to describe a place in history page
     /// </summary>
-    public enum ActivationRequestResults
-    {
-        AllEnabled,
-        AskMeLater,
-        NoAndDontAskAgain,
-        NotAvailableYet
-    };
-
-    /// <summary>
-    /// Describes SensorCore Status 
-    /// </summary>
-    public class ActivateSensorCoreStatus
+    public class PlaceHistory
     {
         /// <summary>
-        /// ActivationRequestResults instance
+        /// Informations about history place
         /// </summary>
-        public ActivationRequestResults activationRequestResult;
+        public string Text { get; set; }
 
         /// <summary>
-        /// Check if the motion data dialog is initialized
+        ///Path Image
         /// </summary>
-        public bool onGoing = false;
+        public string ImagePath { get; set; }
     }
 }

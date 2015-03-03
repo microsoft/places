@@ -132,14 +132,35 @@
   <data name="AddAppBarButton.Label" xml:space="preserve">
     <value>add</value>
   </data>
+  <data name="AdressNotFound" xml:space="preserve">
+    <value>A street address could not be found.</value>
+  </data>
+  <data name="All" xml:space="preserve">
+    <value>All</value>
+  </data>
   <data name="Application.Text" xml:space="preserve">
     <value>LUMIA SENSORCORE SAMPLE</value>
   </data>
   <data name="ApplicationName.Text" xml:space="preserve">
     <value>Places</value>
   </data>
+  <data name="CurrentNotFound" xml:space="preserve">
+    <value>The current location has not been resolved yet.</value>
+  </data>
+  <data name="DetailedSetting.DataCollectionQuality" xml:space="preserve">
+    <value>To get more accurate data you need to enable detailed data collection in Motion data settings. Do you want to open settings now?</value>
+  </data>
   <data name="DontWorry.Text" xml:space="preserve">
     <value>Don't worry, just give your phone some time to determine this location.</value>
+  </data>
+  <data name="FeatureDisabled.Title" xml:space="preserve">
+    <value>Information</value>
+  </data>
+  <data name="FilterButton.Label" xml:space="preserve">
+    <value>day filter</value>
+  </data>
+  <data name="FrequentNotFound" xml:space="preserve">
+    <value>Frequent place has not been recognised yet.</value>
   </data>
   <data name="Header.Text" xml:space="preserve">
     <value>PLACES</value>
@@ -147,17 +168,29 @@
   <data name="HideAppBarButton.Label" xml:space="preserve">
     <value>hide</value>
   </data>
+  <data name="HistoryButton.Label" xml:space="preserve">
+    <value>places history</value>
+  </data>
+  <data name="HistoryPage.Text" xml:space="preserve">
+    <value>places summary</value>
+  </data>
   <data name="HomeNotFound" xml:space="preserve">
     <value>The location of your home has not been figured out yet.</value>
   </data>
   <data name="Information.Text" xml:space="preserve">
     <value>Information</value>
   </data>
+  <data name="KnwonNotFound" xml:space="preserve">
+    <value>Known place has not been recognised yet.</value>
+  </data>
   <data name="LocationNotDefined" xml:space="preserve">
     <value>Location not defined</value>
   </data>
   <data name="NavigationFailedExceptionMessage" xml:space="preserve">
     <value>Navigation failed.</value>
+  </data>
+  <data name="NoHistoryData.Text" xml:space="preserve">
+    <value>No places found</value>
   </data>
   <data name="NoLocationOrMotionDataError.Text" xml:space="preserve">
     <value>This application does not function without location and motion data. The application will be closed.</value>
@@ -170,6 +203,12 @@
   </data>
   <data name="Pivot.Title" xml:space="preserve">
     <value>PLACES</value>
+  </data>
+  <data name="PlaceVisitedSetting" xml:space="preserve">
+    <value>In order to collect and view visited places you need to enable Places visited in Motion data settings. Do you want to open settings now?</value>
+  </data>
+  <data name="Today" xml:space="preserve">
+    <value>(Today)</value>
   </data>
   <data name="Version.Text" xml:space="preserve">
     <value>version</value>
