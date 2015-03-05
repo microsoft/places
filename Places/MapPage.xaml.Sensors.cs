@@ -125,14 +125,9 @@ namespace Places
         private Places.App _app = Application.Current as Places.App;
 
         /// <summary>
-        ///  List of places
-        /// </summary>
-        private List<string> resultStr = new List<string>();
-
-        /// <summary>
         /// Place monitor instance
         /// </summary>
-        private Monitor _placeMonitor;
+        public Monitor _placeMonitor;
 
         /// <summary>
         /// check to see launching finished or not
@@ -200,8 +195,8 @@ namespace Places
                         MessageDialog dlg = null;
                         if (settings.Version < 2)
                         {
-                            //device which has old motion data settings.
-                            //this is equal to motion data settings on/off in old system settings(SDK1.0 based)
+                            // device which has old motion data settings.
+                            // this is equal to motion data settings on/off in old system settings(SDK1.0 based)
                             dlg = new MessageDialog("In order to collect and view visited places you need to enable Motion data in Motion data settings. Do you want to open settings now? if no, application will exit", "Information");
                         }
                         else
@@ -231,7 +226,6 @@ namespace Places
                     FrequentButton.IsEnabled = true;
                     CurrentButton.IsEnabled = true;
                     await ActivityReader.Instance().Initialize();
-                    resultStr = await GetPlacesHistory();
                 }
                 else return;
             }
@@ -593,74 +587,6 @@ namespace Places
                 TopPanel.Visibility = Visibility.Visible;
                 FullScreeButton.Symbol = Symbol.FullScreen;
             }
-        }
-
-        /// <summary>
-        /// Retrieves the places history
-        /// </summary>
-        /// <returns>String of all places history</returns>
-        private async Task<List<string>> GetPlacesHistory()
-        {
-            IList<string> resultStrFinal = new List<string>();
-            IList<Place> result = null;
-            if (_placeMonitor != null)
-            {
-                // Returns time ordered list of places visited during given time period
-                await CallSensorcoreApiAsync(async () =>
-                {
-                    result = await _placeMonitor.GetPlaceHistoryAsync(DateTime.Today - TimeSpan.FromDays(10), TimeSpan.FromDays(10));
-                });
-                // Returns list of activies occured during given time period
-                await CallSensorcoreApiAsync(async () =>
-                {
-                    ActivityReader.Instance().History = await ActivityReader.Instance().ActivityMonitorProperty.GetActivityHistoryAsync(DateTime.Today - TimeSpan.FromDays(10), TimeSpan.FromDays(10));
-                });
-                if (result != null)
-                {
-                    IEnumerable<Place> reverse = result.AsEnumerable().Reverse();
-                    for (int i = 1; i < reverse.Count(); i++)
-                    {
-                        activitiesToShow.Clear();
-                        for (int j = 1; j < ActivityReader.Instance().History.Count; j++)
-                        {
-                            // Compare time of entry to the last location and the current location with the activity timestamp
-                            // Retrieve the activities in a list
-                            if ((ActivityReader.Instance().History.ElementAt(j).Timestamp.ToLocalTime() >= reverse.ElementAt(i - 1).Timestamp.ToLocalTime()) && (ActivityReader.Instance().History.ElementAt(j).Timestamp.ToLocalTime() < reverse.ElementAt(i).Timestamp.ToLocalTime()))
-                            {
-                                if (!activitiesToShow.Contains(ActivityReader.Instance().History.ElementAt(j).Mode))
-                                {
-                                    //Add the activity to the list
-                                    activitiesToShow.Add(ActivityReader.Instance().History.ElementAt(j).Mode);
-                                }
-                            }
-                        }
-                        string time = reverse.ElementAt(i).Timestamp.ToString("MMM dd yyyy HH:mm:ss", CultureInfo.InvariantCulture);
-                        var resultStr = "Place : " + reverse.ElementAt(i).Kind.ToString() + "\nTimestamp : " + time + "\nLenght Of Stay : " + reverse.ElementAt(i).LengthOfStay.ToString() + "\nTotal Lenght Of Stay : " + reverse.ElementAt(i).TotalLengthOfStay.ToString() + "\nTotal Visit Count : " + reverse.ElementAt(i).TotalVisitCount.ToString() + DisplayMembers(activitiesToShow);
-                        resultStrFinal.Add(resultStr);
-                    }
-                }
-            }
-            // Returns a list with details of the places history
-            return resultStrFinal.ToList();
-        }
-
-        /// <summary>
-        /// Display activities for given list
-        /// </summary>
-        /// <param name="activities">List of activities</param>
-        /// <returns>String item</returns>  
-        public string DisplayMembers(List<Activity> activities)
-        {
-            string displayActivities = string.Empty;
-            if (activities.Count != 0)
-            {
-                displayActivities = "\nActivities: " + string.Join(", ", activities.ToList());
-            }
-            else
-            {
-                displayActivities = "\nActivities: Idle";
-            }
-            return displayActivities;
         }
     }
 }

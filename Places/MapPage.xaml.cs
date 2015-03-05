@@ -21,14 +21,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE. 
  */
 using System;
-using System.Diagnostics;
 using System.Linq;
 using Windows.ApplicationModel.Resources;
 using Windows.Devices.Geolocation;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Maps;
 using Windows.UI.Xaml.Navigation;
 using Lumia.Sense;
 using Places.Common;
@@ -84,6 +82,11 @@ namespace Places
         /// Selected day for filter option
         /// </summary>
         private DaySelectionItem _selectedDay;
+
+        /// <summary>
+        /// Synchronization object
+        /// </summary>
+        public SemaphoreSlim _sync = new SemaphoreSlim( 1 );
         #endregion
 
         /// <summary>
@@ -409,21 +412,10 @@ namespace Places
         /// </summary>
         /// <param name="sender">Sender object</param>
         /// <param name="e">Event arguments</param>
-        private async void OnPollHistory(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        private void OnPollHistory(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
-            // Fetch complete stack of places
-            if (resultStr.Count != 0)
-            {
-                // Pass list of places to HistoryPage
-                this.Frame.Navigate(typeof(HistoryPage), resultStr);
-            }
-            else
-            {
-                // Show message if no history data 
-                MessageDialog dialog = new MessageDialog(_resourceLoader.GetString("NoHistoryData/Text"));
-                dialog.Commands.Add(new UICommand(_resourceLoader.GetString("OkButton/Text")));
-                await dialog.ShowAsync();
-            }
+              // Pass list of places to HistoryPage
+                this.Frame.Navigate(typeof(HistoryPage));
         }
 
         /// <summary>
