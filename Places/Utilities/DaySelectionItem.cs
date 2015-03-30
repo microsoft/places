@@ -37,12 +37,23 @@ namespace Places.Utilities
         /// <summary>
         /// Selected day in DateTime format
         /// </summary>
-        public DateTime Day { get; set; }
+        public DateTime? Day { get; set; }
 
         /// <summary>
-        /// Convert to string
+        /// Constructor
         /// </summary>
-        /// <returns>Name in string format</returns>
+        /// <param name="name">Item name</param>
+        /// <param name="day">Item date</param>
+        public DaySelectionItem( string name, DateTime? day )
+        {
+            Name = name;
+            Day = day;
+        }
+
+        /// <summary>
+        /// Returns textual representation of the item
+        /// </summary>
+        /// <returns>Textual representation of the item</returns>
         public override string ToString()
         {
             return Name;

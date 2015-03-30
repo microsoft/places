@@ -30,9 +30,6 @@ using Places.Common;
 using Places.Utilities;
 using Windows.Devices.Geolocation;
 
-/// <summary>
-/// The Pivot Application template is documented at http://go.microsoft.com/fwlink/?LinkID=391641
-/// </summary>
 namespace Places
 {
     /// <summary>
@@ -59,7 +56,7 @@ namespace Places
         {
             this.InitializeComponent();
             this.NavigationCacheMode = NavigationCacheMode.Required;
-            this._navigationHelper = new NavigationHelper(this);
+            this._navigationHelper = new NavigationHelper( this );
             this._navigationHelper.LoadState += this.NavigationHelper_LoadState;
         }
 
@@ -82,15 +79,15 @@ namespace Places
         /// <see cref="Frame.Navigate(Type, Object)"/> when this page was initially requested and
         /// a dictionary of state preserved by this page during an earlier
         /// session. The state will be null the first time a page is visited.</param>
-        private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
+        private void NavigationHelper_LoadState( object sender, LoadStateEventArgs e )
         {
-            if (e.NavigationParameter != null)
+            if( e.NavigationParameter != null )
             {
                 var mapIcon = e.NavigationParameter.ToString();
-                if (mapIcon != null)
+                if( mapIcon != null )
                 {
 
-                    CreatePivotItem(mapIcon);
+                    CreatePivotItem( mapIcon );
                 }
             }
         }
@@ -99,33 +96,33 @@ namespace Places
         /// Create a Pivot and PivotItem, and fill with place info
         /// </summary>
         /// <param name="place">Place instance</param>
-        private async void CreatePivotItem(string place)
+        private async void CreatePivotItem( string place )
         {
             // Get address of a Geopoint location  
             MainGrid.Children.Clear();
-            string[] split = place.Split(new Char[] { '\n', ',' });
-            Geopoint geoPoint = new Geopoint(new BasicGeoposition()
-        {
-            Latitude = Convert.ToDouble(split[1]),
-            Longitude = Convert.ToDouble(split[2])
-        });
-            var newPivot = new Pivot { Title = "MICROSOFT SENSORCORE SAMPLE", Margin = new Thickness(0, 12, 0, 0), Foreground = new SolidColorBrush(Colors.Black) };
-            var pivotItem = new PivotItem { Header = split[0].ToString(), Foreground = new SolidColorBrush(Colors.Black), FontSize = 20 };
+            string[] split = place.Split( new Char[] { '\n', ',' } );
+            Geopoint geoPoint = new Geopoint( new BasicGeoposition()
+            {
+                Latitude = Convert.ToDouble( split[ 1 ] ),
+                Longitude = Convert.ToDouble( split[ 2 ] )
+            } );
+            var newPivot = new Pivot { Title = "MICROSOFT SENSORCORE SAMPLE", Margin = new Thickness( 0, 12, 0, 0 ), Foreground = new SolidColorBrush( Colors.Black ) };
+            var pivotItem = new PivotItem { Header = split[ 0 ].ToString(), Foreground = new SolidColorBrush( Colors.Black ), FontSize = 20 };
             var stackPanel = new StackPanel();
             // Get address of a Geopoint location  
-            var addressTask = GeoLocationHelper.GetAddress(geoPoint);
-            stackPanel.Children.Add(CreateTextBlock("Latitude:", split[1].ToString()));
-            stackPanel.Children.Add(CreateTextBlock("Longitude:", split[2].ToString()));
-            stackPanel.Children.Add(CreateTextBlock("Radius:", split[3].ToString() + " m"));
-            stackPanel.Children.Add(CreateTextBlock("Length of stay:", split[4].ToString()));
-            stackPanel.Children.Add(CreateTextBlock("Total length of stay:", split[5].ToString()));
-            stackPanel.Children.Add(CreateTextBlock("Total visit count:", split[6].ToString()));
+            var addressTask = GeoLocationHelper.GetAddress( geoPoint );
+            stackPanel.Children.Add( CreateTextBlock( "Latitude:", split[ 1 ].ToString() ) );
+            stackPanel.Children.Add( CreateTextBlock( "Longitude:", split[ 2 ].ToString() ) );
+            stackPanel.Children.Add( CreateTextBlock( "Radius:", split[ 3 ].ToString() + " m" ) );
+            stackPanel.Children.Add( CreateTextBlock( "Length of stay:", split[ 4 ].ToString() ) );
+            stackPanel.Children.Add( CreateTextBlock( "Total length of stay:", split[ 5 ].ToString() ) );
+            stackPanel.Children.Add( CreateTextBlock( "Total visit count:", split[ 6 ].ToString() ) );
             pivotItem.Content = stackPanel;
-            newPivot.Items.Add(pivotItem);
-            MainGrid.Children.Add(newPivot);
+            newPivot.Items.Add( pivotItem );
+            MainGrid.Children.Add( newPivot );
             _addressString = await addressTask;
             //Add address to the pivot
-            stackPanel.Children.Add(CreateTextBlock("Address:", _addressString));
+            stackPanel.Children.Add( CreateTextBlock( "Address:", _addressString ) );
         }
 
         /// <summary>
@@ -134,11 +131,11 @@ namespace Places
         /// <param name="text">Inner text that is displayed in the TextBlock </param>
         /// <param name="value">Value for the TextBlock</param>
         /// <returns>TextBlock</returns>
-        private static TextBlock CreateTextBlock(string text, string value)
+        private static TextBlock CreateTextBlock( string text, string value )
         {
             return new TextBlock
             {
-                FontFamily = new FontFamily("Segoe UI"),
+                FontFamily = new FontFamily( "Segoe UI" ),
                 FontSize = 27,
                 Text = text + " " + value,
                 TextWrapping = TextWrapping.Wrap
@@ -153,7 +150,7 @@ namespace Places
         /// <param name="sender">The source of the event; typically <see cref="NavigationHelper"/>.</param>
         /// <param name="e">Event data that provides an empty dictionary to be populated with
         /// serializable state.</param>
-        private void NavigationHelper_SaveState(object sender, SaveStateEventArgs e)
+        private void NavigationHelper_SaveState( object sender, SaveStateEventArgs e )
         {
         }
 
@@ -162,18 +159,18 @@ namespace Places
         /// Called when a page becomes the active page in a frame.
         /// </summary>
         /// <param name="e">Event arguments</param>
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected override void OnNavigatedTo( NavigationEventArgs e )
         {
-            this._navigationHelper.OnNavigatedTo(e);
+            this._navigationHelper.OnNavigatedTo( e );
         }
 
         /// <summary>
         /// Called when a page is no longer the active page in a frame.
         /// </summary>
         /// <param name="e">Event arguments</param>
-        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        protected override void OnNavigatedFrom( NavigationEventArgs e )
         {
-            this._navigationHelper.OnNavigatedFrom(e);
+            this._navigationHelper.OnNavigatedFrom( e );
         }
         #endregion
     }

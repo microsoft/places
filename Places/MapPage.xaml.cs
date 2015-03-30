@@ -21,12 +21,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE. 
  */
 using System;
+using System.Diagnostics;
 using System.Linq;
 using Windows.ApplicationModel.Resources;
 using Windows.Devices.Geolocation;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Maps;
 using Windows.UI.Xaml.Navigation;
 using Lumia.Sense;
 using Places.Common;
@@ -35,14 +37,10 @@ using Windows.Globalization;
 using Places.Utilities;
 using System.Threading;
 
-/// <summary>
-/// The Basic Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
-/// </summary>
 namespace Places
 {
     /// <summary>
-    /// All the logic releated to the usage of Place Monitor API.
-    /// Shows home, work,and all the known and frequent places (geo-locations) on the map.
+    /// Application main page
     /// </summary>
     public sealed partial class MapPage : Page
     {
@@ -59,14 +57,13 @@ namespace Places
 
         /// <summary>
         /// View model instance
-        /// This can be changed to a strongly typed view model
         /// </summary>
         private ObservableDictionary _defaultViewModel = new ObservableDictionary();
 
         /// <summary>
-        /// Frequent id to return the place position 
+        /// Index of the currently active known place
         /// </summary>
-        private int _chosenFrequentId = -1;
+        private int _currentKnownPlaceIndex = -1;
 
         /// <summary>
         /// Constructs a new ResourceLoader object
@@ -76,17 +73,7 @@ namespace Places
         /// <summary>
         /// List with days for the filter option
         /// </summary>
-        private readonly List<DaySelectionItem> _optionList = new List<DaySelectionItem>();
-
-        /// <summary>
-        /// Selected day for filter option
-        /// </summary>
-        private DaySelectionItem _selectedDay;
-
-        /// <summary>
-        /// Synchronization object
-        /// </summary>
-        public SemaphoreSlim _sync = new SemaphoreSlim( 1 );
+        private readonly List<DaySelectionItem> _daySelectionList = new List<DaySelectionItem>();
         #endregion
 
         /// <summary>
@@ -95,16 +82,40 @@ namespace Places
         public MapPage()
         {
             this.InitializeComponent();
-            if(_instanceMap == null)
-               _instanceMap = this;
+            this.NavigationCacheMode = NavigationCacheMode.Required;
+            if( _instanceMap == null )
+            {
+                _instanceMap = this;
+            }
             this.menuFlyout = new MenuFlyout();
-            this._navigationHelper = new NavigationHelper(this);
-            this._navigationHelper.LoadState += this.NavigationHelper_LoadState;
-            this._navigationHelper.SaveState += this.NavigationHelper_SaveState;
+            this._navigationHelper = new NavigationHelper( this );
             PlacesMap.MapServiceToken = "xxx";
-            FillDateList();
-            this.listSource.Source = _optionList;
-            _selectedDay = _optionList.Last();
+            PopulateDaySelectionList();
+            DaySelectionSource.Source = _daySelectionList;
+
+            // Activate and deactivate the SensorCore when the visibility of the app changes
+            Window.Current.VisibilityChanged += async ( oo, ee ) =>
+            {
+                if( !ee.Visible )
+                {
+                    if( _placeMonitor != null )
+                    {
+                        await CallSensorcoreApiAsync( async () => { await _placeMonitor.DeactivateAsync(); } );
+                    }
+                }
+                else
+                {
+                    await ValidateSettingsAsync();
+                    if( _placeMonitor == null )
+                    {
+                        await InitializeAsync();
+                    }
+                    else
+                    {
+                        await CallSensorcoreApiAsync( async () => { await _placeMonitor.ActivateAsync(); } );
+                    }
+                }
+            };
         }
 
         /// <summary>
@@ -116,39 +127,11 @@ namespace Places
         }
 
         /// <summary>
-        /// Gets the view model for this <see cref="Page"/>.
-        /// This can be changed to a strongly typed view model.
+        /// Gets the view model for this page
         /// </summary>
         public ObservableDictionary DefaultViewModel
         {
             get { return this._defaultViewModel; }
-        }
-
-        /// <summary>
-        /// Populates the page with content passed during navigation.  Any saved state is also
-        /// provided when recreating a page from a prior session.
-        /// </summary>
-        /// <param name="sender">
-        /// The source of the event; typically <see cref="NavigationHelper"/>
-        /// </param>
-        /// <param name="e">Event data that provides both the navigation parameter passed to
-        /// <see cref="Frame.Navigate(Type, Object)"/> when this page was initially requested and
-        /// a dictionary of state preserved by this page during an earlier
-        /// session.  The state will be null the first time a page is visited.</param>
-        private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
-        {       
-        }
-
-        /// <summary>
-        /// Preserves state associated with this page in case the application is suspended or the
-        /// page is discarded from the navigation cache.  Values must conform to the serialization
-        /// requirements of <see cref="SuspensionManager.SessionState"/>.
-        /// </summary>
-        /// <param name="sender">The source of the event; typically <see cref="NavigationHelper"/></param>
-        /// <param name="e">Event data that provides an empty dictionary to be populated with
-        /// serializable state.</param>
-        private void NavigationHelper_SaveState(object sender, SaveStateEventArgs e)
-        {
         }
 
         #region NavigationHelper registration
@@ -156,110 +139,75 @@ namespace Places
         /// Called when a page becomes the active page in a frame.
         /// </summary>
         /// <param name="e">Event arguments</param>
-        protected override async void OnNavigatedTo(NavigationEventArgs e)
+        protected override async void OnNavigatedTo( NavigationEventArgs e )
         {
-            this._navigationHelper.OnNavigatedTo(e);
-            ActivateSensorCoreStatus status = _app.SensorCoreActivationStatus;
-            if (e.NavigationMode == NavigationMode.Back && status.onGoing)
+            this._navigationHelper.OnNavigatedTo( e );
+            if( e.NavigationMode == NavigationMode.Back )
             {
-                status.onGoing = false;
-                if (status.activationRequestResult != ActivationRequestResults.AllEnabled)
+                await ValidateSettingsAsync();
+                if( _placeMonitor == null )
                 {
-                    MessageDialog dialog = new MessageDialog(_resourceLoader.GetString("NoLocationOrMotionDataError/Text"), _resourceLoader.GetString("Information/Text"));
-                    dialog.Commands.Add(new UICommand(_resourceLoader.GetString("OkButton/Text")));
-                    await dialog.ShowAsync();
-                    new System.Threading.ManualResetEvent(false).WaitOne(500);
-                    Application.Current.Exit();
+                    await InitializeAsync();
                 }
             }
-            PlacesMap.Center = new Geopoint(new BasicGeoposition()
-            {
-                Latitude = 60.17,
-                Longitude = 24.83
-            });
-            if (ActivityReader.Instance().ActivityMonitorProperty != null)
-            {
-                ActivityReader.Instance().ActivityMonitorProperty.ReadingChanged += ActivityReader.Instance().activityMonitor_ReadingChanged;
-            }
-            if (!iLaunched)
-            {
-                iLaunched = true;
-                await InitCore();    
-            }              
         }
 
         /// <summary>
         /// Called when a page is no longer the active page in a frame.
         /// </summary>
         /// <param name="e">Event arguments</param>
-        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        protected override void OnNavigatedFrom( NavigationEventArgs e )
         {
-            this._navigationHelper.OnNavigatedFrom(e);
-            if (ActivityReader.Instance().ActivityMonitorProperty != null)
-            {
-                ActivityReader.Instance().ActivityMonitorProperty.ReadingChanged -= ActivityReader.Instance().activityMonitor_ReadingChanged;
-            }
+            this._navigationHelper.OnNavigatedFrom( e );
         }
         #endregion
 
         /// <summary>
-        /// Fill the list with current day of week, and in descending order rest of the weekdays
+        /// Populate day selection list
         /// </summary>
-        private void FillDateList()
+        private void PopulateDaySelectionList()
         {
-            int today = (int)DateTime.Now.DayOfWeek; // Current day
-            int count = 0;
-            for (int i = today; i >= 0; i--)
+            GeographicRegion userRegion = new GeographicRegion();
+            var userDateFormat = new Windows.Globalization.DateTimeFormatting.DateTimeFormatter( "shortdate", new[] { userRegion.Code } );
+            for( int i = 0; i < 7; i++ )
             {
-                var item = new DaySelectionItem { Day = DateTime.Now.Date - TimeSpan.FromDays(count) };
-                var nameOfDay = System.Globalization.DateTimeFormatInfo.CurrentInfo.DayNames[i];
-                // Add an indicator to current day
-                if (count == 0)
+                var nameOfDay = System.Globalization.DateTimeFormatInfo.CurrentInfo.DayNames[ ( (int)DateTime.Now.DayOfWeek + 7 - i ) % 7 ];
+                if( i == 0 )
                 {
-                    nameOfDay += " " + _resourceLoader.GetString("Today");
+                    nameOfDay += " " + _resourceLoader.GetString( "Today" );
                 }
-                GeographicRegion userRegion = new GeographicRegion();
-                var userDateFormat = new Windows.Globalization.DateTimeFormatting.DateTimeFormatter("shortdate", new[] { userRegion.Code });
-                var dateDefault = userDateFormat.Format(item.Day);
-                item.Name = nameOfDay + " " + dateDefault;
-                _optionList.Add(item);
-                count++;
-                // First day of the week, but not all weekdays still listed,
-                // continue from the last weekday
-                if (i == 0 && count <= 6)
-                {
-                    i = 7;
-                }
-                else if (count == 10) // All weekdays listed, exit the loop
-                {
-                    i = 0;
-                }
+                DateTime itemDate = DateTime.Now.Date - TimeSpan.FromDays( i );
+                _daySelectionList.Add(
+                    new DaySelectionItem(
+                        nameOfDay + " " + userDateFormat.Format( itemDate ),
+                        itemDate ) );
             }
             // Add the option to show everything
-            _optionList.Add(new DaySelectionItem { Name = _resourceLoader.GetString("All") });
+            _daySelectionList.Add( new DaySelectionItem( _resourceLoader.GetString( "All" ), null ) );
         }
 
         /// <summary>
-        /// Opens a menu flyout with options to choose from
+        /// Day selection button click event handler
         /// </summary>
-        /// <param name="sender">The control that the action is for.</param>
-        /// <param name="args">Parameter that contains the event data.</param>
-        private void SelectButton_Click(object sender, RoutedEventArgs e)
+        /// <param name="sender">Sender object</param>
+        /// <param name="args">Event arguments</param>
+        private void DayFilterButton_Click( object sender, RoutedEventArgs e )
         {
-            if (menuFlyout != null)
-            {            
+            if( menuFlyout != null )
+            {
                 menuFlyout.Items.Clear();
-                for (int i = 0; i < listSource.View.Count; i++)
-                {
+                foreach( var item in DaySelectionSource.View )
+                { 
                     flyoutItem = new MenuFlyoutItem();
-                    flyoutItem.Text = this.listSource.View[i].ToString();
+                    flyoutItem.Text = item.ToString();
+                    flyoutItem.Tag = item;
                     flyoutItem.FontSize = 22;
                     flyoutItem.FlowDirection = Windows.UI.Xaml.FlowDirection.LeftToRight;
                     flyoutItem.Click += flyoutItem_Click;
-                    menuFlyout.Items.Add(flyoutItem);
+                    menuFlyout.Items.Add( flyoutItem );
                 }
-                menuFlyout.Items.Add(new MenuFlyoutItem());
-                menuFlyout.ShowAt(CmdBar);
+                menuFlyout.Items.Add( new MenuFlyoutItem() );
+                menuFlyout.ShowAt( CmdBar );
             }
         }
 
@@ -268,18 +216,15 @@ namespace Places
         /// </summary>
         /// <param name="sender">The control that the action is for.</param>
         /// <param name="args">Parameter that contains the event data.</param>
-        private async void flyoutItem_Click(object sender, RoutedEventArgs e)
+        private async void flyoutItem_Click( object sender, RoutedEventArgs e )
         {
             var flyoutItem = e.OriginalSource as MenuFlyoutItem;
             try
             {
-                for (int i = 0; i < listSource.View.Count; i++)
-                    if (flyoutItem.Text.Contains(listSource.View[i].ToString()))
-                        _selectedDay = (DaySelectionItem)listSource.View[i];              
-                await UpdateKnownPlacesAsync();
-                FilterTime.Text = _selectedDay.Name;
+                FilterTime.Text = (flyoutItem.Tag as DaySelectionItem ).Name;
+                await UpdateKnownPlacesAsync( ( flyoutItem.Tag as DaySelectionItem ).Day.HasValue ? ( flyoutItem.Tag as DaySelectionItem ).Day.Value : (DateTime?)null );
             }
-            catch (Exception)
+            catch( Exception )
             {
             }
         }
@@ -289,16 +234,16 @@ namespace Places
         /// </summary>
         /// <param name="sender">The sender of the event</param>
         /// <param name="e">Contains state information and event data associated with a routed event.</param>
-        private async void OnHomeClicked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        private async void HomeButton_Click( object sender, Windows.UI.Xaml.RoutedEventArgs e )
         {
             bool foundPlace = false;
-            if (_app.Places != null)
+            if( _app.Places != null )
             {
-                foreach (Place place in _app.Places)
+                foreach( Place place in _app.Places )
                 {
-                    if (place.Kind == PlaceKind.Home)
+                    if( place.Kind == PlaceKind.Home )
                     {
-                        PlacesMap.Center = new Geopoint(place.Position);
+                        PlacesMap.Center = new Geopoint( place.Position );
                         PlacesMap.ZoomLevel = 13;
                         foundPlace = true;
                         break;
@@ -306,11 +251,11 @@ namespace Places
                 }
             }
             // It takes some time for SensorCore SDK to figure out your known locations
-            if (!foundPlace)
+            if( !foundPlace )
             {
-                var messageText = _resourceLoader.GetString("HomeNotFound") + " " + _resourceLoader.GetString("DontWorry/Text");
-                var messageHeader = _resourceLoader.GetString("LocationNotDefined");
-                var messageDialog = new MessageDialog(messageText, messageHeader);
+                var messageText = _resourceLoader.GetString( "HomeNotFound" ) + " " + _resourceLoader.GetString( "DontWorry/Text" );
+                var messageHeader = _resourceLoader.GetString( "LocationNotDefined" );
+                var messageDialog = new MessageDialog( messageText, messageHeader );
                 await messageDialog.ShowAsync();
             }
         }
@@ -320,16 +265,16 @@ namespace Places
         /// </summary>
         /// <param name="sender">The sender of the event</param>
         /// <param name="e">Contains state information and event data associated with a routed event.</param>
-        private async void OnWorkClicked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        private async void WorkButton_Click( object sender, Windows.UI.Xaml.RoutedEventArgs e )
         {
             bool foundPlace = false;
-             if (_app.Places != null)
+            if( _app.Places != null )
             {
-                foreach (Place place in _app.Places)
+                foreach( Place place in _app.Places )
                 {
-                    if (place.Kind == PlaceKind.Work)
+                    if( place.Kind == PlaceKind.Work )
                     {
-                        PlacesMap.Center = new Geopoint(place.Position);
+                        PlacesMap.Center = new Geopoint( place.Position );
                         PlacesMap.ZoomLevel = 13;
                         foundPlace = true;
                         break;
@@ -337,11 +282,11 @@ namespace Places
                 }
             }
             // It takes some time for SensorCore SDK to figure out your known locations
-            if (!foundPlace)
+            if( !foundPlace )
             {
-                var messageText = _resourceLoader.GetString("WorkNotFound") + " " + _resourceLoader.GetString("DontWorry/Text");
-                var messageHeader = _resourceLoader.GetString("LocationNotDefined");
-                var messageDialog = new MessageDialog(messageText, messageHeader);
+                var messageText = _resourceLoader.GetString( "WorkNotFound" ) + " " + _resourceLoader.GetString( "DontWorry/Text" );
+                var messageHeader = _resourceLoader.GetString( "LocationNotDefined" );
+                var messageDialog = new MessageDialog( messageText, messageHeader );
                 await messageDialog.ShowAsync();
             }
         }
@@ -351,13 +296,13 @@ namespace Places
         /// </summary>
         /// <param name="sender">The sender of the event</param>
         /// <param name="e">Contains state information and event data associated with a routed event.</param>
-        private async void OnCurrentClicked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        private async void CurrentButton_Click( object sender, Windows.UI.Xaml.RoutedEventArgs e )
         {
-            if (_currentLocation == null)
+            if( _currentLocation == null )
             {
-                var text = _resourceLoader.GetString("CurrentNotFound") + " " + _resourceLoader.GetString("DontWorry/Text");
-                var header = _resourceLoader.GetString("LocationNotDefined");
-                var dialog = new MessageDialog(text, header);
+                var text = _resourceLoader.GetString( "CurrentNotFound" ) + " " + _resourceLoader.GetString( "DontWorry/Text" );
+                var header = _resourceLoader.GetString( "LocationNotDefined" );
+                var dialog = new MessageDialog( text, header );
                 await dialog.ShowAsync();
             }
             else
@@ -372,50 +317,91 @@ namespace Places
         /// </summary>
         /// <param name="sender">The sender of the event</param>
         /// <param name="e">Contains state information and event data associated with a routed event.</param>
-        private async void OnFrequentClicked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        private async void FrequentButton_Click( object sender, Windows.UI.Xaml.RoutedEventArgs e )
         {
-            if (_app.Places != null)
+            if( _app.Places != null )
             {
                 var notHomeNorWork =
                     from place in _app.Places
                     where place.Kind != PlaceKind.Home && place.Kind != PlaceKind.Work
                     orderby place.Kind descending
                     select place;
-                if (notHomeNorWork.Count() == 0)
+                if( notHomeNorWork.Count() == 0 )
                 {
-                    var text = _resourceLoader.GetString("FrequentNotFound") + " " + _resourceLoader.GetString("DontWorry/Text");
-                    var header = _resourceLoader.GetString("LocationNotDefined");
-                    var dialog = new MessageDialog(text, header);
+                    var text = _resourceLoader.GetString( "FrequentNotFound" ) + " " + _resourceLoader.GetString( "DontWorry/Text" );
+                    var header = _resourceLoader.GetString( "LocationNotDefined" );
+                    var dialog = new MessageDialog( text, header );
                     await dialog.ShowAsync();
                     return;
                 }
-                _chosenFrequentId++;
-                if (_chosenFrequentId >= notHomeNorWork.Count())
+                _currentKnownPlaceIndex++;
+                if( _currentKnownPlaceIndex >= notHomeNorWork.Count() )
                 {
-                    _chosenFrequentId = 0;
+                    _currentKnownPlaceIndex = 0;
                 }
-                PlacesMap.Center = new Geopoint(notHomeNorWork.ElementAt(_chosenFrequentId).Position);
+                PlacesMap.Center = new Geopoint( notHomeNorWork.ElementAt( _currentKnownPlaceIndex ).Position );
                 PlacesMap.ZoomLevel = 13;
             }
             else
             {
-                var text = _resourceLoader.GetString("FrequentNotFound") + " " + _resourceLoader.GetString("DontWorry/Text");
-                var header = _resourceLoader.GetString("LocationNotDefined");
-                var dialog = new MessageDialog(text, header);
+                var text = _resourceLoader.GetString( "FrequentNotFound" ) + " " + _resourceLoader.GetString( "DontWorry/Text" );
+                var header = _resourceLoader.GetString( "LocationNotDefined" );
+                var dialog = new MessageDialog( text, header );
                 await dialog.ShowAsync();
                 return;
             }
         }
 
         /// <summary>
-        /// Get history button click event handler
+        /// Navigates to details page for the selected place
+        /// </summary>
+        /// <param name="sender">The sender of the event</param>
+        /// <param name="args">Provides data about user input for the map tapped</param>
+        private void OnTapped(MapControl sender, MapInputEventArgs args)
+        {
+            try
+            {
+                var elementList = PlacesMap.FindMapElementsAtOffset(args.Position);
+                foreach (var element in elementList)
+                {
+                    var mapIcon = element as MapIcon;
+                    if (mapIcon != null)
+                    {
+                        Place place = MapExtensions.GetValue(mapIcon);
+                        var frame = Window.Current.Content as Frame;
+                        var resultStr = place.Kind + "\n" + place.Position.Latitude.ToString() + "\n" + place.Position.Longitude.ToString() + "\n" +
+                            place.Radius.ToString() + "\n" + place.LengthOfStay.ToString() + "\n" + place.TotalLengthOfStay.ToString() + "\n" + place.TotalVisitCount.ToString();
+                        this.Frame.Navigate(typeof(PivotPage), resultStr);
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Place history button click event handler
         /// </summary>
         /// <param name="sender">Sender object</param>
         /// <param name="e">Event arguments</param>
-        private void OnPollHistory(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        private async void HistoryButton_Click( object sender, Windows.UI.Xaml.RoutedEventArgs e )
         {
-              // Pass list of places to HistoryPage
-                this.Frame.Navigate(typeof(HistoryPage));
+            // Fetch complete stack of places
+            if( _placeHistory.Count != 0 )
+            {
+                // Pass list of places to HistoryPage
+                this.Frame.Navigate( typeof( HistoryPage ), _placeHistory );
+            }
+            else
+            {
+                // Show message if no history data 
+                MessageDialog dialog = new MessageDialog( _resourceLoader.GetString( "NoHistoryData/Text" ) );
+                dialog.Commands.Add( new UICommand( _resourceLoader.GetString( "OkButton/Text" ) ) );
+                await dialog.ShowAsync();
+            }
         }
 
         /// <summary>
@@ -423,9 +409,9 @@ namespace Places
         /// </summary>
         /// <param name="sender">The sender of the event</param>
         /// <param name="e">Contains state information and event data associated with a routed event.</param>
-        private void OnAboutClicked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        private void AboutButton_Click( object sender, Windows.UI.Xaml.RoutedEventArgs e )
         {
-            this.Frame.Navigate(typeof(AboutPage));
+            this.Frame.Navigate( typeof( AboutPage ) );
         }
     }
 }

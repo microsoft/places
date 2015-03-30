@@ -31,7 +31,7 @@ using Windows.UI.Xaml.Navigation;
 namespace Places
 {
     /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
+    /// Application about page
     /// </summary>
     public sealed partial class AboutPage : Page
     {
@@ -46,7 +46,7 @@ namespace Places
         /// This can be changed to a strongly typed view model
         /// </summary>
         private ObservableDictionary _defaultViewModel = new ObservableDictionary();
-        #endregion 
+        #endregion
 
         /// <summary>
         /// Constructor
@@ -54,13 +54,13 @@ namespace Places
         public AboutPage()
         {
             this.InitializeComponent();
-            this._navigationHelper = new NavigationHelper(this);
+            this._navigationHelper = new NavigationHelper( this );
             this._navigationHelper.LoadState += this.NavigationHelper_LoadState;
             this._navigationHelper.SaveState += this.NavigationHelper_SaveState;
-            this.Loaded += (sender, args) =>
+            this.Loaded += ( sender, args ) =>
             {
                 var ver = Windows.ApplicationModel.Package.Current.Id.Version;
-                VersionNumber.Text = string.Format("{0}.{1}.{2}.{3}", ver.Major, ver.Minor,ver.Build, ver.Revision);
+                VersionNumber.Text = string.Format( "{0}.{1}.{2}.{3}", ver.Major, ver.Minor, ver.Build, ver.Revision );
             };
         }
 
@@ -92,8 +92,8 @@ namespace Places
         /// <see cref="Frame.Navigate(Type, Object)"/> when this page was initially requested and
         /// a dictionary of state preserved by this page during an earlier
         /// session.  The state will be null the first time a page is visited.</param>
-        private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
-        { 
+        private void NavigationHelper_LoadState( object sender, LoadStateEventArgs e )
+        {
         }
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace Places
         /// <param name="sender">The source of the event; typically <see cref="NavigationHelper"/></param>
         /// <param name="e">Event data that provides an empty dictionary to be populated with
         /// serializable state.</param>
-        private void NavigationHelper_SaveState(object sender, SaveStateEventArgs e)
+        private void NavigationHelper_SaveState( object sender, SaveStateEventArgs e )
         {
         }
 
@@ -113,18 +113,18 @@ namespace Places
         /// Called when a page becomes the active page in a frame.
         /// </summary>
         /// <param name="e">Event arguments</param>
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected override void OnNavigatedTo( NavigationEventArgs e )
         {
-            this._navigationHelper.OnNavigatedTo(e);
+            this._navigationHelper.OnNavigatedTo( e );
         }
 
         /// <summary>
         /// Called when a page is no longer the active page in a frame.
         /// </summary>
         /// <param name="e">Event arguments</param>
-        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        protected override void OnNavigatedFrom( NavigationEventArgs e )
         {
-            this._navigationHelper.OnNavigatedFrom(e);
+            this._navigationHelper.OnNavigatedFrom( e );
         }
         #endregion
     }

@@ -9,7 +9,7 @@
     mc:Ignorable="d"
     Background="#A4C400">
     <Page.Resources>
-        <CollectionViewSource x:Name="listSource"/>
+        <CollectionViewSource x:Name="DaySelectionSource"/>
     </Page.Resources>
     <Grid x:Name="LayoutRoot">        
         <Grid.ChildrenTransitions>
@@ -28,10 +28,10 @@
         </StackPanel>
         <!--Content should be placed within the following grid-->
         <Grid Grid.Row="1" x:Name="ContentRoot" >
-            <maps:MapControl x:Name="PlacesMap" Margin="0,0,0,0"
+            <maps:MapControl x:Name="PlacesMap" Margin="0,0,0,0" MapTapped="OnTapped"
                             ZoomLevel="13"/>
             <TextBlock x:Name="FilterTime" FontSize="24" TextAlignment="Right" Width="480" Height="30" HorizontalAlignment="Right" VerticalAlignment="Top" Foreground="#7F000000" Margin="5,5"/>
-            <SymbolIcon x:Name="FullScreeButton" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,15,31" Symbol="FullScreen" Tapped="FullScreeButton_OnTapped" RenderTransformOrigin="0.5,0.5" Grid.Column="1">
+            <SymbolIcon x:Name="FullScreenButton" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,15,31" Symbol="FullScreen" Tapped="FullScreenButton_Click" RenderTransformOrigin="0.5,0.5" Grid.Column="1">
                 <SymbolIcon.RenderTransform>
                     <CompositeTransform ScaleX="2" ScaleY="2"/>
                 </SymbolIcon.RenderTransform>
@@ -40,30 +40,30 @@
     </Grid>
     <Page.BottomAppBar>
         <CommandBar x:Name="CmdBar" Background="#A4C400" Foreground="Black">
-            <AppBarButton x:Uid="HomeButton" x:Name="HomeButton" Label="home" IsEnabled="False" Click="OnHomeClicked">
+            <AppBarButton x:Uid="HomeButton" x:Name="HomeButton" Label="home" IsEnabled="False" Click="HomeButton_Click">
                 <AppBarButton.Icon>
                     <BitmapIcon UriSource="/Assets/show-home.png"/>
                 </AppBarButton.Icon>
             </AppBarButton>
-            <AppBarButton x:Uid="WorkButton" x:Name="WorkButton" Label="work" IsEnabled="False" Click="OnWorkClicked">
+            <AppBarButton x:Uid="WorkButton" x:Name="WorkButton" Label="work" IsEnabled="False" Click="WorkButton_Click">
                 <AppBarButton.Icon>
                     <BitmapIcon UriSource="/Assets/show-work.png"/>
                 </AppBarButton.Icon>
             </AppBarButton>
-            <AppBarButton x:Uid="FrequentButton" x:Name="FrequentButton" Label="frequent" IsEnabled="False" Click="OnFrequentClicked">
+            <AppBarButton x:Uid="FrequentButton" x:Name="FrequentButton" Label="frequent" IsEnabled="False" Click="FrequentButton_Click">
                 <AppBarButton.Icon>
                     <BitmapIcon UriSource="/Assets/show-next-favorite.png"/>
                 </AppBarButton.Icon>
             </AppBarButton>
-            <AppBarButton x:Uid="CurrentButton" x:Name="CurrentButton" Label="current" IsEnabled="False" Click="OnCurrentClicked">
+            <AppBarButton x:Uid="CurrentButton" x:Name="CurrentButton" Label="current" IsEnabled="False" Click="CurrentButton_Click">
                 <AppBarButton.Icon>
                     <BitmapIcon UriSource="/Assets/show-current-location.png"/>
                 </AppBarButton.Icon>
             </AppBarButton>
             <CommandBar.SecondaryCommands>
-                <AppBarButton x:Uid="AboutButton" x:Name="AboutButton" Label="" Click="OnAboutClicked"/>
-                <AppBarButton x:Uid="HistoryButton" x:Name="HistoryButton" Label="" Click="OnPollHistory"/>
-                <AppBarButton x:Uid="FilterButton" x:Name="FilterButton" Label="" Click="SelectButton_Click">
+                <AppBarButton x:Uid="AboutButton" x:Name="AboutButton" Label="" Click="AboutButton_Click"/>
+                <AppBarButton x:Uid="HistoryButton" x:Name="HistoryButton" Label="" Click="HistoryButton_Click"/>
+                <AppBarButton x:Uid="DayFilterButton" x:Name="DayFilterButton" Label="" Click="DayFilterButton_Click">
                         <MenuFlyout x:Name="menuFlyout">
                             <MenuFlyout.MenuFlyoutPresenterStyle>
                                 <Style TargetType="MenuFlyoutPresenter">

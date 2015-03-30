@@ -47,36 +47,14 @@ namespace Places
         /// Instance of the TransitionCollection class
         /// </summary>
         private TransitionCollection transitions;
-
-        /// <summary>
-        /// Status of SensorCore
-        /// </summary>
-        private ActivateSensorCoreStatus _sensorCoreActivationStatus = new ActivateSensorCoreStatus();
         #endregion
 
-        /// <summary>
-        /// Gets or sets the status of SensorCore
-        /// </summary>
-        public ActivateSensorCoreStatus SensorCoreActivationStatus
-        {
-            get
-            {
-                return _sensorCoreActivationStatus;
-            }
-            private set
-            {
-                _sensorCoreActivationStatus = value;
-            }
-        }
-
+        #region Public properties
         /// <summary>
         /// List of known places
         /// </summary>
-        public IList<Place> Places
-        {
-            get;
-            set;
-        }
+        public IList<Place> Places { get; set; }
+        #endregion
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -102,10 +80,10 @@ namespace Places
         /// search results, and so forth.
         /// </summary>
         /// <param name="e">Details about the launch request and process.</param>
-        protected override async void OnLaunched(LaunchActivatedEventArgs e)
+        protected override async void OnLaunched( LaunchActivatedEventArgs e )
         {
 #if DEBUG
-            if (System.Diagnostics.Debugger.IsAttached)
+            if( System.Diagnostics.Debugger.IsAttached )
             {
                 this.DebugSettings.EnableFrameRateCounter = true;
             }
@@ -113,22 +91,22 @@ namespace Places
             Frame rootFrame = Window.Current.Content as Frame;
             // Do not repeat app initialization when the Window already has content,
             // just ensure that the window is active.
-            if (rootFrame == null)
+            if( rootFrame == null )
             {
                 // Create a Frame to act as the navigation context and navigate to the first page.
                 rootFrame = new Frame();
                 // Associate the frame with a SuspensionManager key.
-                SuspensionManager.RegisterFrame(rootFrame, "AppFrame");
+                SuspensionManager.RegisterFrame( rootFrame, "AppFrame" );
                 //Change this value to a cache size that is appropriate for your application.
                 rootFrame.CacheSize = 1;
-                if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
+                if( e.PreviousExecutionState == ApplicationExecutionState.Terminated )
                 {
                     // Restore the saved session state only when appropriate.
                     try
                     {
                         await SuspensionManager.RestoreAsync();
                     }
-                    catch (SuspensionManagerException)
+                    catch( SuspensionManagerException )
                     {
                         // Something went wrong restoring state.
                         // Assume there is no state and continue.
@@ -137,15 +115,15 @@ namespace Places
                 // Place the frame in the current Window.
                 Window.Current.Content = rootFrame;
             }
-            if (rootFrame.Content == null)
+            if( rootFrame.Content == null )
             {
                 // Removes the turnstile navigation for startup.
-                if (rootFrame.ContentTransitions != null)
+                if( rootFrame.ContentTransitions != null )
                 {
                     this.transitions = new TransitionCollection();
-                    foreach (var c in rootFrame.ContentTransitions)
+                    foreach( var c in rootFrame.ContentTransitions )
                     {
-                        this.transitions.Add(c);
+                        this.transitions.Add( c );
                     }
                 }
                 rootFrame.ContentTransitions = null;
@@ -153,9 +131,9 @@ namespace Places
                 // When the navigation stack isn't restored navigate to the first page,
                 // configuring the new page by passing required information as a navigation
                 // parameter.
-                if (!rootFrame.Navigate(typeof(MapPage), e.Arguments))
+                if( !rootFrame.Navigate( typeof( MapPage ), e.Arguments ) )
                 {
-                    throw new Exception("Failed to create initial page");
+                    throw new Exception( "Failed to create initial page" );
                 }
             }
             // Ensure the current window is active.
@@ -167,7 +145,7 @@ namespace Places
         /// </summary>
         /// <param name="sender"The source of the event.></param>
         /// <param name="e">Event arguments</param>
-        private void RootFrame_FirstNavigated(object sender, NavigationEventArgs e)
+        private void RootFrame_FirstNavigated( object sender, NavigationEventArgs e )
         {
             var rootFrame = sender as Frame;
             rootFrame.ContentTransitions = this.transitions ?? new TransitionCollection() { new NavigationThemeTransition() };
@@ -179,19 +157,19 @@ namespace Places
         /// </summary>
         /// <param name="sender">The source of the event. <see cref="HardwareButtons"/></param>
         /// <param name="e">Details about the back button press.</param>
-        private void HardwareButtons_BackPressed(object sender, BackPressedEventArgs e)
+        private void HardwareButtons_BackPressed( object sender, BackPressedEventArgs e )
         {
             Frame frame = Window.Current.Content as Frame;
-            if (frame == null)
+            if( frame == null )
             {
                 return;
             }
             var handler = this.BackPressed;
-            if (handler != null)
+            if( handler != null )
             {
-                handler(sender, e);
+                handler( sender, e );
             }
-            if (frame.CanGoBack && !e.Handled)
+            if( frame.CanGoBack && !e.Handled )
             {
                 frame.GoBack();
                 e.Handled = true;
@@ -205,7 +183,7 @@ namespace Places
         /// </summary>
         /// <param name="sender">The source of the suspend request.</param>
         /// <param name="e">Details about the suspend request.</param>
-        private async void OnSuspending(object sender, SuspendingEventArgs e)
+        private async void OnSuspending( object sender, SuspendingEventArgs e )
         {
             var deferral = e.SuspendingOperation.GetDeferral();
             await SuspensionManager.SaveAsync();

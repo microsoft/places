@@ -38,40 +38,40 @@ namespace Places.Utilities
         /// </summary>
         /// <param name="geopoint"></param>
         /// <returns><c>address</c> upon success, <c>error message</c> otherwise</returns>
-        public static async Task<string> GetAddress(Geopoint geopoint)
+        public static async Task<string> GetAddress( Geopoint geopoint )
         {
             var loader = new ResourceLoader();
             // Find the address of the tapped location
-            MapLocationFinderResult result = await MapLocationFinder.FindLocationsAtAsync(geopoint);
+            MapLocationFinderResult result = await MapLocationFinder.FindLocationsAtAsync( geopoint );
             // If successful then display the address.
-            if (result.Status == MapLocationFinderStatus.Success)
+            if( result.Status == MapLocationFinderStatus.Success )
             {
                 string displayAddress = null;
                 // Get the list of locations found by MapLocationFinder 
-                if (result.Locations.Count > 0)
+                if( result.Locations.Count > 0 )
                 {
-                    if (string.IsNullOrEmpty(result.Locations[0].Address.Street))
+                    if( string.IsNullOrEmpty( result.Locations[ 0 ].Address.Street ) )
                     {
                         // If the address of a geographic loaction is empty or null, get only the town and region
-                        var region = result.Locations[0].Address.Region != "" ? ", " + result.Locations[0].Address.Region : null;
-                        displayAddress = result.Locations[0].Address.Town + region;
+                        var region = result.Locations[ 0 ].Address.Region != "" ? ", " + result.Locations[ 0 ].Address.Region : null;
+                        displayAddress = result.Locations[ 0 ].Address.Town + region;
                     }
                     else
                     {
                         // Get the complete address of a geographic location
-                        displayAddress = result.Locations[0].Address.StreetNumber + " " + result.Locations[0].Address.Street;
+                        displayAddress = result.Locations[ 0 ].Address.StreetNumber + " " + result.Locations[ 0 ].Address.Street;
                     }
                     return displayAddress;
                 }
                 // Show message error if location is not found
                 else
                 {
-                    var msg = loader.GetString("AdressNotFound");
+                    var msg = loader.GetString( "AdressNotFound" );
                     return msg;
                 }
             }
             // Show message error if the query location is not successful
-            var error = loader.GetString("LocationNotDefined");
+            var error = loader.GetString( "LocationNotDefined" );
             return error;
         }
     }

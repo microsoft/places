@@ -156,8 +156,8 @@
   <data name="FeatureDisabled.Title" xml:space="preserve">
     <value>Information</value>
   </data>
-  <data name="FilterButton.Label" xml:space="preserve">
-    <value>day filter</value>
+  <data name="DayFilterButton.Label" xml:space="preserve">
+    <value>day select</value>
   </data>
   <data name="FrequentNotFound" xml:space="preserve">
     <value>Frequent place has not been recognised yet.</value>

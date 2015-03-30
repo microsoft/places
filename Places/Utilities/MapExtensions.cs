@@ -36,18 +36,18 @@ namespace Places.Utilities
         /// </summary>
         private static readonly DependencyProperty ValueProperty = DependencyProperty.RegisterAttached(
           "Place",
-          typeof(Place),
-          typeof(MapExtensions),
-          new PropertyMetadata(default(uint)));
+          typeof( Place ),
+          typeof( MapExtensions ),
+          new PropertyMetadata( default( uint ) ) );
 
         /// <summary>
         /// Set the value of a property
         /// </summary>
         /// <param name="element">Represents an object that participates in the dependency property system. The object whose property value will be set.</param>
         /// <param name="value">The new property value.</param>
-        private static void SetValueProperty(DependencyObject element, Place value)
+        private static void SetValueProperty( DependencyObject element, Place value )
         {
-            element.SetValue(ValueProperty, value);
+            element.SetValue( ValueProperty, value );
         }
 
         /// <summary>
@@ -55,9 +55,9 @@ namespace Places.Utilities
         /// </summary>
         /// <param name="element">The object whose property value will be returned</param>
         /// <returns>Place object</returns>
-        private static Place GetValueProperty(DependencyObject element)
+        private static Place GetValueProperty( DependencyObject element )
         {
-            return (Place)element.GetValue(ValueProperty);
+            return (Place)element.GetValue( ValueProperty );
         }
 
         /// <summary>
@@ -65,9 +65,9 @@ namespace Places.Utilities
         /// </summary>
         /// <param name="target">Represents an element on the map control. The object whose property value will be set</param>
         /// <param name="value">The new property value.</param>
-        public static void SetValue(MapElement target, Place value)
+        public static void SetValue( MapElement target, Place value )
         {
-            SetValueProperty(target, value);
+            SetValueProperty( target, value );
         }
 
         /// <summary>
@@ -75,9 +75,9 @@ namespace Places.Utilities
         /// </summary>
         /// <param name="target">The object whose property value will be returned</param>
         /// <returns>Place object</returns>
-        public static Place GetValue(MapElement target)
+        public static Place GetValue( MapElement target )
         {
-            return GetValueProperty(target);
+            return GetValueProperty( target );
         }
     }
 }
